@@ -1,0 +1,145 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 自定义滚动条 */
+.gantt-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.gantt-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+.gantt-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.gantt-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 工具提示样式 */
+.truncate-with-tooltip {
+  position: relative;
+}
+
+.truncate-with-tooltip:hover::after {
+  content: attr(title);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  background: #1e293b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  pointer-events: none;
+}
+
+/* 统一的甘特图行高变量 */
+:root {
+  --gantt-row-height: 30px;
+  --gantt-bar-height: 20px;
+  --gantt-table-header-height: 30px;
+}
+
+/* 任务名称自动换行（超过8个汉字时换行） */
+.task-name-cell {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+  max-height: 100%;
+  line-height: 1.2;
+}
+
+/* 针对汉字优化的换行设置 */
+.task-name-cell.chinese-text {
+  word-wrap: break-word;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  hyphens: manual;
+  line-height: 1.2;
+}
+
+/* 垂直对齐工具类 */
+.task-cell {
+  display: flex;
+  align-items: center;
+  height: var(--gantt-row-height);
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+/* 甘特图行样式 */
+.gantt-row {
+  height: var(--gantt-row-height);
+  position: relative;
+}
+
+/* 甘特图行分隔线扩展样式 */
+.gantt-row::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e2e8f0;
+  z-index: 5;
+}
+
+/* 甘特图表头样式 */
+.gantt-table-header {
+  height: var(--gantt-table-header-height);
+  background-color: #f8fafc;
+  position: relative;
+}
+
+/* 表头底部线 */
+.gantt-table-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e2e8f0;
+  z-index: 5;
+}
+
+/* 甘特图时间轴任务容器 */
+.gantt-timeline-task {
+  height: var(--gantt-row-height);
+  display: flex;
+  align-items: center;
+}
+
+/* 任务行单元格样式 */
+.task-cell {
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
