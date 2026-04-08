@@ -60,7 +60,7 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete 
   }
 
   function handleSave() {
-    if (!startDate || !endDate) return
+    if (!startDate || !endDate || !task) return
     onSave(task.id, { name, startDate, endDate, color, duration })
     onClose()
   }

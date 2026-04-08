@@ -2,7 +2,7 @@ import React from 'react'
 
 interface GanttChartProps {
   children: React.ReactNode
-  exportRef: React.RefObject<HTMLDivElement | null>
+  exportRef: React.RefObject<HTMLDivElement>
 }
 
 export default function GanttChart({ children, exportRef }: GanttChartProps) {
