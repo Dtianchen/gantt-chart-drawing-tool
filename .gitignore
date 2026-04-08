@@ -5,8 +5,18 @@ node_modules/
 
 # Build output
 dist/
-build/
+#build/
+output/
+release/
+dist-release/
 *.local
+
+# Electron packaging
+runtime/
+
+# Temp scripts
+gen-icon.cjs
+build-log*.txt
 
 # Editor directories and files
 .vscode/*

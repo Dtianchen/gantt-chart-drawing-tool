@@ -74,7 +74,7 @@ export const mockTasks: Task[] = [
     id: 'task-9',
     name: 'API 接口设计（RESTful规范）',
     duration: 6,
-    startDate: '2026-09',
+    startDate: '2026-05-09',
     endDate: '2026-05-14',
     color: 'blue',
   },
