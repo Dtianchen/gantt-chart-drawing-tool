@@ -21,6 +21,7 @@
 | **导出图片** | 将甘特图导出为 PNG 图片保存/分享 |
 | **数据持久化** | 使用 localStorage 自动保存，刷新不丢失 |
 | **桌面应用** | Electron 打包为 Windows EXE，关闭窗口即完全退出 |
+| **内置 Web 服务** | 便携版 Nginx，一键启动本地 Web 版本 |
 
 ---
 
@@ -54,8 +55,48 @@ npm run dev
 | `启动进度工具.bat` | 开发模式（自动安装依赖 + 自动构建 + 启动 dev server） | 系统已装 Node.js |
 | `构建生产版本.bat` | 构建生产版本到 `dist/` 目录（Web 静态文件） | 系统已装 Node.js |
 | `打包EXE.bat` | 打包 Windows 桌面应用到 `dist-exe/` 目录（含镜像加速 + 自动清进程） | 系统已装 Node.js |
+| **`启动Web服务.bat`** | **一键构建 + 启动内置 Nginx Web 服务 + 打开浏览器** | 系统已装 Node.js |
+| **`停止Web服务.bat`** | **停止 Nginx Web 服务** | 无需任何环境 |
 
-> 双击 `.bat` 文件即可运行，无需手动输入命令。三个脚本均使用**系统 Node.js**（需确保 `node` 和 `npm` 在系统 PATH 中可用）。
+> 前 3 个脚本使用**系统 Node.js**。Web 服务脚本额外包含便携版 Nginx（4.5MB），无需安装任何服务器软件。
+
+---
+
+## 方式三：一键 Web 服务（内置 Nginx）
+
+> 最简单的方式：双击即可在本地浏览器中使用，无需 EXE、无需手动配置服务器！
+
+```bash
+# 双击「启动Web服务.bat」
+# 自动完成：构建 → 启动Nginx → 打开浏览器
+# 访问 http://localhost:8080
+```
+
+### 使用流程
+
+```
+双击「启动Web服务.bat」
+    │
+    ├── [1/3] 检查 dist/ 是否存在 → 不存在则自动 npm run build
+    ├── [2/3] 停止旧 Nginx 进程
+    └── [3/3] 启动 nginx.exe (localhost:8080)
+            │
+            ▼
+    浏览器自动打开 http://localhost:8080
+            │
+    （关闭窗口或运行「停止Web服务.bat」可停止服务）
+```
+
+### 技术细节
+
+| 项目 | 值 |
+|------|-----|
+| **端口** | 8080 |
+| **根目录** | `dist/`（构建产物） |
+| **SPA 支持** | 所有路径回退到 `index.html` |
+| **Gzip 压缩** | 已开启（CSS/JS/JSON/SVG） |
+| **缓存策略** | `/assets/*` 永久缓存，`index.html` 不缓存 |
+| **Nginx 版本** | 1.26.3（精简版，4.5MB） |
 
 ---
 
@@ -169,7 +210,11 @@ npm run electron:build
 │   ├── main.cjs                  # 主进程（CommonJS，关闭窗口自动退出）
 │   └── preload.cjs               # 安全预加载脚本
 ├── build/
-│   └── icon.ico                  # Windows 应用图标（256x256 蓝色）
+│   ├── icon.ico                  # Windows 应用图标（256x256 蓝色）
+│   └── icon.png                  # 图标源文件
+├── nginx/                         # 内置便携版 Nginx（4.5MB）
+│   ├── nginx.exe                 # Nginx 可执行文件
+│   └── conf/nginx.conf           # 预配置（端口 8080 → dist/）
 ├── public/favicon.svg            # 网页图标
 ├── index.html                    # HTML 入口
 ├── package.json                  # 项目配置 & Electron Builder 配置
@@ -182,7 +227,9 @@ npm run electron:build
 ├── README.md                     # 本文件
 ├── 启动进度工具.bat               # 开发模式一键启动
 ├── 构建生产版本.bat               # 构建生产版本一键脚本
-└── 打包EXE.bat                    # Electron EXE 打包（含镜像+自动清进程）
+├── 打包EXE.bat                    # Electron EXE 打包（含镜像+自动清进程）
+├── 启动Web服务.bat                # Nginx Web 服务一键启动
+└── 停止Web服务.bat                # 停止 Nginx Web 服务
 ```
 
 ---
@@ -251,6 +298,7 @@ npm run electron:build
 
 | 版本 | 日期 | 关键变更 |
 |------|------|---------|
+| [1.0.5](./CHANGELOG.md#105--2026-04-09) | 2026-04-09 | 新增内置 Nginx Web 服务；输出目录改为 dist-exe |
 | [1.0.4](./CHANGELOG.md#104--2026-04-09) | 2026-04-09 | 修复进程残留 bug；清理无用文件释放 ~100MB |
 | [1.0.3](./CHANGELOG.md#103--2026-04-08) | 2026-04-08 | 修复 EXE 空白/锁定/签名；新增180天示例数据 |
 | [1.0.2](./CHANGELOG.md#102--2026-04-08) | 2026-04-08 | 新增 Electron 打包、一键脚本、完整文档 |

@@ -12,6 +12,10 @@ dist-exe/
 # Electron packaging
 runtime/
 
+# Nginx runtime
+nginx/logs/
+nginx/temp/
+
 # Temp scripts
 gen-icon.cjs
 build-log*.txt
