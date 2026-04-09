@@ -9,10 +9,9 @@ interface HeaderInfo {
 }
 
 /**
- * 用 TreeWalker 遍历所有子元素，强制移除所有尺寸和溢出限制
- * 确保克隆后的 DOM 内容完整可见，不被任何容器裁剪
+ * 精准清除溢出裁剪限制（仅处理 overflow/max-height），保留所有布局属性
  */
-function forceAllVisible(root: HTMLElement): void {
+function removeOverflowClipping(root: HTMLElement): void {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
   const els: HTMLElement[] = []
   let node: Node | null
@@ -20,17 +19,12 @@ function forceAllVisible(root: HTMLElement): void {
     els.push(node as HTMLElement)
   }
   for (const el of els) {
+    // 只移除溢出裁剪，保留 height/flex/grid 等布局属性不变
     el.style.setProperty('overflow', 'visible', 'important')
     el.style.setProperty('max-height', 'none', 'important')
     el.style.setProperty('max-width', 'none', 'important')
-    // 移除固定高度约束，让内容自然展开
-    if (!el.classList.contains('gantt-row') && !el.classList.contains('gantt-timeline-task')) {
-      el.style.height = 'auto'
-    }
-    el.style.minHeight = ''
-    el.style.flexShrink = '0'
-    el.style.flexGrow = '0'
-    el.style.flexBasis = 'auto'
+    el.style.setProperty('clip', 'auto', 'important')
+    el.style.setProperty('clip-path', 'none', 'important')
   }
 }
 
@@ -49,23 +43,22 @@ export function useGanttExport() {
   ): Promise<void> => {
     if (!element) return
 
-    // ── 1. 深度克隆整个甘特图容器 ──
+    // ── 1. 深度克隆 ──
     const clone = element.cloneNode(true) as HTMLElement
 
-    // ── 2. 强制所有子元素可见（关键修复）──
-    forceAllVisible(clone)
+    // ── 2. 仅移除溢出裁剪（保留布局结构完整）──
+    removeOverflowClipping(clone)
 
-    // ── 3. 获取时间轴宽度（优先从原始元素的 getComputedStyle 读取）──
+    // ── 3. 获取时间轴宽度 ──
     const origContent = element.querySelector('.gantt-timeline-content') as HTMLElement
-    const timelineContent = clone.querySelector('.gantt-timeline-content') as HTMLElement
     let actualWidth = 6000
-    if (timelineContent && origContent) {
+    if (origContent) {
       const cs = getComputedStyle(origContent)
       const w = parseInt(cs.width, 10) || parseInt(origContent.style.width, 10)
       if (w > 0) actualWidth = w
     }
 
-    // ── 4. 构建头部信息行（项目名称、起止时间、工期）──
+    // ── 4. 构建头部信息行 ──
     const headerHeight = headerInfo && headerInfo.startDate ? 40 : 0
     const headerRowEl = headerHeight > 0 ? (() => {
       const row = document.createElement('div')
@@ -83,61 +76,48 @@ export function useGanttExport() {
       return row
     })() : null
 
-    // ── 5. 计算初始容器尺寸（估算值，后面会实测修正）──
+    // ── 5. 计算容器尺寸（基于任务数 + 时间轴宽度）──
     const ROW_H = 30
-    const HEADER_H = 46
-    const safeTaskCount = Math.max(taskCount, 1)
-    const estimatedH = headerHeight + HEADER_H + (safeTaskCount * ROW_H) + 40
-    const estimatedW = Math.max(actualWidth + 540 + 120, element.scrollWidth + 200)
+    const TIME_HEADER_H = 46
+    const safeCount = Math.max(taskCount, 1)
+    const totalH = headerHeight + TIME_HEADER_H + (safeCount * ROW_H) + 20
+    const totalW = Math.max(actualWidth + 540 + 80, element.scrollWidth + 100)
 
-    // ── 6. 创建包装容器并挂载到 body ──
+    // ── 6. 包装容器（固定精确尺寸）──
     const wrapper = document.createElement('div')
     wrapper.style.cssText = `
       position:fixed;top:0;left:0;z-index:999999;
       background:#fff;display:flex;flex-direction:column;
-      width:${estimatedW}px;height:${estimatedH}px;
-      overflow:visible !important;
+      width:${totalW}px;height:${totalH}px;
+      overflow:hidden;
     `
 
     if (headerRowEl) wrapper.appendChild(headerRowEl)
 
-    // 设置克隆根样式
+    // 克隆根：保持 grid 布局，只设 overflow visible
     clone.style.cssText = `
-      width:100%;display:grid;grid-template-columns:540px auto;
-      overflow:visible !important;flex:none;height:auto;
+      display:grid;grid-template-columns:540px ${actualWidth}px;
+      overflow:visible;width:100%;height:auto;flex:none;
     `
     wrapper.appendChild(clone)
     document.body.appendChild(wrapper)
 
-    // ── 7. 等待渲染完成（首次）──
+    // ── 7. 等待渲染 ──
     await new Promise(r => setTimeout(r, 300))
 
-    // ── 8. 实测渲染尺寸（关键修复！以实际为准而非公式估算）──
-    let finalW = Math.max(wrapper.scrollWidth, wrapper.offsetWidth, estimatedW)
-    let finalH = Math.max(wrapper.scrollHeight, wrapper.offsetHeight, estimatedH)
-
-    // 如果实测大于估算 → 更新容器尺寸并再次等待
-    if (finalW > estimatedW || finalH > estimatedH) {
-      wrapper.style.width = finalW + 60 + 'px'
-      wrapper.style.height = finalH + 60 + 'px'
-      await new Promise(r => setTimeout(r, 300))
-      finalW = Math.max(wrapper.scrollWidth, wrapper.offsetWidth)
-      finalH = Math.max(wrapper.scrollHeight, wrapper.offsetHeight)
-    }
-
     try {
-      console.log('[导出]', { 任务数: safeTaskCount, 宽度: finalW, 高度: finalH, 时间轴宽度: actualWidth })
+      console.log('[导出]', { 任务数: safeCount, 宽度: totalW, 高度: totalH })
 
-      // ── 9. 截图（使用实测的精确尺寸）──
+      // ── 8. 截图 ──
       const dataUrl = await toPng(wrapper, {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
         cacheBust: true,
-        width: finalW,
-        height: finalH,
+        width: totalW,
+        height: totalH,
       })
 
-      // ── 10. 触发下载 ──
+      // ── 9. 下载 ──
       const link = document.createElement('a')
       link.download = filename
       link.href = dataUrl
@@ -146,7 +126,6 @@ export function useGanttExport() {
     } catch (error) {
       console.error('导出失败:', error)
     } finally {
-      // ── 11. 清理临时 DOM 节点 ──
       if (wrapper.parentNode === document.body) {
         document.body.removeChild(wrapper)
       }
