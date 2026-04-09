@@ -4,20 +4,15 @@ title Gantt Tool - Build Production
 
 cd /d "%~dp0"
 
-:: Use built-in Node.js runtime
-set "NODE_EXE=%~dp0runtime\node-v20.18.0-win-x64\node.exe"
-set "NPM_EXE=%~dp0runtime\node-v20.18.0-win-x64\npm.cmd"
-set "PATH=%~dp0runtime\node-v20.18.0-win-x64;%PATH%"
-
 echo ==========================================
-echo    Gantt Tool - Build Production
+echo   Gantt Tool - Build Production
 echo ==========================================
 echo.
 
-:: Check dependencies
+::: Check dependencies
 if not exist "node_modules" (
     echo [INFO] Installing dependencies...
-    call "%NPM_EXE%" install
+    call npm install
     if %errorlevel% neq 0 (
         echo [ERROR] Install failed!
         pause
@@ -29,7 +24,7 @@ if not exist "node_modules" (
 echo [INFO] Building production version...
 echo.
 
-call "%NPM_EXE%" run build
+call npm run build
 
 if %errorlevel% equ 0 (
     echo.
@@ -38,7 +33,7 @@ if %errorlevel% equ 0 (
     echo   Output: dist\
     echo   Ready for static server deployment
     echo ==========================================
-) else (
+:) else (
     echo.
     echo [ERROR] Build failed, check errors above
 )
