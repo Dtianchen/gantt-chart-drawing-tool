@@ -38,7 +38,7 @@ export default function TaskRow({ task, index, scale, onEdit }: TaskRowProps) {
       onDoubleClick={() => onEdit?.(task)}
       title={`双击编辑：${task.name}`}
     >
-      <div className={`w-10 flex items-center justify-center text-slate-500 font-mono shrink-0 border-r border-slate-200 task-cell relative ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
+      <div className={`w-10 flex items-center justify-center text-slate-500 font-mono shrink-0 border-r border-black task-cell relative ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
         <button
           {...attributes}
           {...listeners}
@@ -49,7 +49,7 @@ export default function TaskRow({ task, index, scale, onEdit }: TaskRowProps) {
         <span>{index + 1}</span>
       </div>
 
-      <div className="flex-1 px-2 min-w-0 border-r border-slate-200 task-cell">
+      <div className="flex-1 px-2 min-w-0 border-r border-black task-cell">
         <div className="flex items-center h-full">
           <span 
             title={task.name} 
@@ -60,15 +60,15 @@ export default function TaskRow({ task, index, scale, onEdit }: TaskRowProps) {
         </div>
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-slate-600 shrink-0 border-r border-slate-200 task-cell ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
+      <div className={`w-20 flex items-center justify-center text-slate-600 shrink-0 border-r border-black task-cell ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
         {task.duration}<span className="ml-0.5 text-slate-400">天</span>
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-slate-600 shrink-0 font-mono border-r border-slate-200 task-cell ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
+      <div className={`w-20 flex items-center justify-center text-slate-600 shrink-0 font-mono border-r border-black task-cell ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
         {formatFullDate(task.startDate)}
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-slate-600 shrink-0 font-mono border-r border-slate-200 task-cell ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
+      <div className={`w-20 flex items-center justify-center text-slate-600 shrink-0 font-mono border-r border-black task-cell ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
         {formatFullDate(task.endDate)}
       </div>
     </div>

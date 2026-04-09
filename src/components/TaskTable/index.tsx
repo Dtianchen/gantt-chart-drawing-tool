@@ -48,11 +48,11 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
     <div className="border-r border-slate-200 bg-white flex flex-col overflow-hidden">
       {/* 表头 */}
       <div className={`flex items-center gantt-table-header font-semibold text-slate-600 uppercase shrink-0 ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
-        <div className="w-10 flex items-center justify-center shrink-0 border-r border-slate-200 h-full task-cell">编号</div>
-        <div className="flex-1 px-2 flex items-center justify-center min-w-0 border-r border-slate-200 h-full task-cell">工作名称</div>
-        <div className="w-20 flex items-center justify-center shrink-0 border-r border-slate-200 h-full task-cell">持续时间</div>
-        <div className="w-20 flex items-center justify-center shrink-0 border-r border-slate-200 h-full task-cell">开始时间</div>
-        <div className="w-20 flex items-center justify-center shrink-0 border-r border-slate-200 h-full task-cell">结束时间</div>
+        <div className="w-10 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">编号</div>
+        <div className="flex-1 px-2 flex items-center justify-center min-w-0 border-r border-black h-full task-cell">工作名称</div>
+        <div className="w-20 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">持续时间</div>
+        <div className="w-20 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">开始时间</div>
+        <div className="w-20 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">结束时间</div>
       </div>
 
       {/* 表体 */}
