@@ -34,7 +34,7 @@ export default function TaskRow({ task, index, scale, onEdit }: TaskRowProps) {
       style={style}
       className={`flex items-center gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
         index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-      } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''}`}
+      } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''} border-b border-black`}
       onDoubleClick={() => onEdit?.(task)}
       title={`双击编辑：${task.name}`}
     >
