@@ -1,4 +1,4 @@
-import { X } from 'lucide-react'
+import { X, Plus, Pencil, GripVertical, Move, Calendar, ZoomIn, Download } from 'lucide-react'
 
 interface HelpModalProps {
   isOpen: boolean

@@ -4,6 +4,39 @@
 
 ---
 
+## [1.0.6] - 2026-04-09
+
+### 修复
+
+- **导出图片信息栏错乱**（任务条位置偏移、左右不对齐、日期散落）
+  - 根因：`forceAllVisible` 过于激进，清除了 `height/flex/grid` 等布局属性
+  - 修复：重写为 `removeOverflowClipping` — 仅精准清除 `overflow/max-height/clip` 四个溢出属性
+  - 影响：Grid 布局和行高保持完整，导出图片与页面显示一致
+
+- **导出图片任务数与页面不一致**
+  - 根因链路：App 未传 taskCount → 导出函数只能从 DOM 查询 → 受 overflow-hidden 约束 → 部分行被裁剪
+  - 修复：
+    1. `useGanttExport` 新增 `taskCount` 参数，优先使用传入的可靠值
+    2. `TreeWalker` 遍历所有子元素强制 overflow=visible（替代递归 fixChildren）
+    3. `Toolbar` 新增 `taskCount` prop 并透传给导出函数
+    4. `App` 传入 `tasks.length` 作为任务数来源
+
+- **HelpModal 运行时崩溃**（点击帮助面板白屏）
+  - 根因：之前清理 import 时误删了 `Plus/Pencil/GripVertical/Move/Calendar/ZoomIn/Download` 共 7 个图标
+  - 修复：恢复全部 7 个图标的 import
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `src/hooks/useGanttExport.ts` | 重写：taskCount 参数 + removeOverflowClipping 精准清除 + Grid 列宽精确设值 |
+| `src/components/Toolbar/index.tsx` | 新增 taskCount prop |
+| `src/App.tsx` | 传入 taskCount={tasks.length} |
+| `src/components/HelpModal/index.tsx` | 恢复 7 个缺失的 lucide-react 图标 import |
+| `.gitignore` | 补充 output/、release/ 忽略规则 |
+
+---
+
 ## [1.0.5] - 2026-04-09
 
 ### 新功能
@@ -45,7 +78,6 @@
 | `gen-icon.cjs` | 一次性图标生成脚本（icon.ico 已生成） |
 | `dist-release/` | 旧打包输出目录（已换用 output/） |
 | `runtime/` | 便携版 Node.js v20 运行时（~100MB，已被 EXE 替代） |
-| `dist/` | 可重新生成的 Web 构建产物 |
 
 ### 变更
 
@@ -78,9 +110,9 @@
   - 修复：打包脚本自动 `taskkill` 清理残留进程 + 更换输出目录为 `output/`
 - **CommonJS / ES Module 冲突**（`require is not defined`）
   - 根因：`package.json` 设置 `"type": "module"` 导致 `.js` 文件被当作 ES 模块
-  - 修复：Electron 主进程文件重命名为 `.cjs` 扩展名（`main.js` → `main.cjs`, `preload.js` → `preload.cjs`）
+  - 修复：Electron 主进程文件重命名为 `.cjs` 扩展名
 - **BAT 脚本 Unicode 制表符乱码**
-  - 修复：移除 Unicode 绘图字符，改用 ASCII 安全字符 (`=`)
+  - 修复：移除 Unicode 绘图字符，改用 ASCII 安全字符
 - **GitHub 网络超时**（国内无法下载 winCodeSign）
   - 修复：添加淘宝镜像加速 + 配置 `forceCodeSigning: false`
 
@@ -129,9 +161,10 @@
 | 1.0.0 | 2026-04-08 | Major | 首次发布，完整功能上线 |
 | 1.0.1 | 2026-04-08 | Patch | 修复 TS 类型错误 |
 | 1.0.2 | 2026-04-08 | Minor | 新增 Electron 打包、一键脚本、文档 |
-| 1.0.3 | 2026-04-08 | Patch | 修复 EXE 空白/锁定/签名问题；新增强大示例数据 |
+| 1.0.3 | 2026-04-08 | Patch | 修复 EXE 空白/锁定/签名；新增强大示例数据 |
+| 1.0.4 | 2026-04-09 | Patch | 修复进程残留 bug；清理无用文件 |
 | 1.0.5 | 2026-04-09 | Minor | 新增内置 Nginx Web 服务（一键启动/停止） |
-| 1.0.4 | 2026-04-09 | Patch | 修复进程残留 bug；清理无用文件（释放~100MB） |
+| 1.0.6 | 2026-04-09 | Patch | 修复导出图片错乱+任务数不一致；修复 HelpModal 崩溃 |
 
 ---
 
