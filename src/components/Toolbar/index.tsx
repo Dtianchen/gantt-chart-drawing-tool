@@ -94,15 +94,6 @@ export default function Toolbar({
 
       <div className="w-px h-6 bg-slate-200 mx-1" />
 
-      <button
-        onClick={onShowHelp}
-        className={`${btnBase} bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 hover:border-indigo-300`}
-        title="帮助"
-      >
-        <HelpCircle size={15} />
-        帮助
-      </button>
-
       {onReset && (
         <button
           onClick={() => {
@@ -117,6 +108,15 @@ export default function Toolbar({
           重置
         </button>
       )}
+
+      <button
+        onClick={onShowHelp}
+        className={`${btnBase} bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 hover:border-indigo-300`}
+        title="帮助"
+      >
+        <HelpCircle size={15} />
+        帮助
+      </button>
     </div>
   )
 }
