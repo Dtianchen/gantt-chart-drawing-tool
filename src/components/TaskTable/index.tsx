@@ -45,7 +45,7 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
   }
 
   return (
-    <div className="border-r border-slate-200 bg-white flex flex-col overflow-hidden">
+    <div className="border-r border-black bg-white flex flex-col overflow-hidden">
       {/* 表头 */}
       <div className={`flex items-center gantt-table-header font-semibold text-slate-600 uppercase shrink-0 ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
         <div className="w-10 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">编号</div>

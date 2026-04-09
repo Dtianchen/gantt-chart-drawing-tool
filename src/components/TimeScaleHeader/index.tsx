@@ -35,11 +35,11 @@ export default function TimeScaleHeader({ startDate, endDate, scale, dayWidth }:
   const cellWidth = scale === 'week' ? dayWidth : dayWidth * 7
 
   return (
-    <div className="shrink-0 bg-slate-50 border-b border-slate-200">
+    <div className="shrink-0 bg-slate-50 border-b border-black">
       {/* 月份行 */}
-      <div className="flex h-[14px] border-b border-slate-200">
+      <div className="flex h-[14px] border-b border-black">
         {months.map(month => (
-          <div key={month.label} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: month.width }}>
+          <div key={month.label} className="shrink-0 flex items-center justify-center border-r border-black last:border-r-0" style={{ width: month.width }}>
             <span className={`font-semibold text-slate-700 ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>{month.label}</span>
           </div>
         ))}
@@ -54,7 +54,7 @@ export default function TimeScaleHeader({ startDate, endDate, scale, dayWidth }:
           return (
             <div
               key={i}
-              className={`shrink-0 flex flex-col items-center justify-end border-r border-slate-200 last:border-r-0 ${
+              className={`shrink-0 flex flex-col items-center justify-end border-r border-black last:border-r-0 ${
                 isWeekend ? 'bg-red-100/40' : ''
               }`}
               style={{ width: dayWidth, height: '100%' }}
@@ -79,7 +79,7 @@ export default function TimeScaleHeader({ startDate, endDate, scale, dayWidth }:
         {/* 底部刻度线 */}
         <div className="absolute bottom-0 left-0 right-0 flex">
           {dates.map((_, i) => (
-            <div key={i} className="border-l border-slate-200 shrink-0" style={{ width: dayWidth, height: '1px' }} />
+            <div key={i} className="border-l border-black shrink-0" style={{ width: dayWidth, height: '1px' }} />
           ))}
         </div>
       </div>
