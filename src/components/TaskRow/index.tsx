@@ -9,9 +9,10 @@ interface TaskRowProps {
   task: Task
   index: number
   scale: TimeScale
+  onEdit?: (task: Task) => void
 }
 
-export default function TaskRow({ task, index, scale }: TaskRowProps) {
+export default function TaskRow({ task, index, scale, onEdit }: TaskRowProps) {
   const {
     attributes,
     listeners,
@@ -31,9 +32,11 @@ export default function TaskRow({ task, index, scale }: TaskRowProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gantt-row group ${
+      className={`flex items-center gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
         index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
       } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''}`}
+      onDoubleClick={() => onEdit?.(task)}
+      title={`双击编辑：${task.name}`}
     >
       <div className={`w-16 flex items-center justify-center text-slate-500 font-mono shrink-0 border-r border-slate-200 task-cell relative ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
         <button

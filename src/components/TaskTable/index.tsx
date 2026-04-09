@@ -21,9 +21,10 @@ interface TaskTableProps {
   scale: TimeScale
   onDelete: (id: string) => void
   onReorder: (oldIndex: number, newIndex: number) => void
+  onEditTask?: (task: Task) => void
 }
 
-export default function TaskTable({ tasks, scale, onDelete, onReorder }: TaskTableProps) {
+export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTask }: TaskTableProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -60,7 +61,7 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder }: TaskTab
           <div className="flex-1 overflow-y-auto gantt-scroll">
             {tasks.length > 0 ? (
               tasks.map((task, index) => (
-                <TaskRow key={task.id} task={task} index={index} scale={scale} />
+                <TaskRow key={task.id} task={task} index={index} scale={scale} onEdit={onEditTask} />
               ))
             ) : (
               <div className={`flex items-center justify-center h-full text-slate-400 ${scale === 'month' ? 'text-xs' : 'text-sm'}`}>

@@ -145,6 +145,7 @@ export default function App() {
           scale={scale}
           onDelete={deleteTask}
           onReorder={reorderTasks}
+          onEditTask={handleEditTask}
         />
         <GanttTimeline
           tasks={tasks}
