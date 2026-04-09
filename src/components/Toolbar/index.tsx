@@ -133,9 +133,9 @@ export default function Toolbar({
         {showTemplates && (
           <>
             {/* 点击外部关闭 */}
-            <div className="fixed inset-0 z-30" onClick={() => setShowTemplates(false)} />
+            <div className="fixed inset-0 z-30" onClick={(e) => { e.preventDefault(); setShowTemplates(false) }} />
             
-            <div className="absolute top-full left-0 mt-1.5 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[200px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="px-3 pt-2 pb-1.5 border-b border-slate-100">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">选择模板</p>
               </div>
@@ -144,12 +144,12 @@ export default function Toolbar({
                 <button
                   key={tpl.id}
                   onClick={() => handleSelectTemplate(tpl.id)}
-                  className="w-full flex items-start gap-3 px-3 py-2.5 hover:bg-violet-50 transition-colors text-left"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-violet-50 transition-colors text-left"
                 >
-                  <LayoutTemplate size={16} className="mt-0.5 shrink-0 text-violet-400" />
+                  <LayoutTemplate size={15} className="shrink-0 text-violet-400" />
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-slate-700 leading-tight">{tpl.name}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">{tpl.description}</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5 leading-tight">{tpl.description}</p>
                   </div>
                 </button>
               ))}
