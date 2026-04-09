@@ -81,14 +81,14 @@ export default function GanttTimeline({
           <div className="absolute inset-0 top-0 pointer-events-none">
             {/* 垂直线（日期网格线） */}
             {[...Array(totalDays)].map((_, i) => (
-              <div key={i} className="absolute top-0 bottom-0 border-r border-black" style={{ left: i * dayWidth }} />
+              <div key={i} className="absolute top-0 bottom-0 border-r border-slate-200" style={{ left: i * dayWidth }} />
             ))}
             
             {/* 水平线（任务行分隔线） */}
             {[...Array(tasks.length + 1)].map((_, i) => (
               <div
                 key={`h-${i}`}
-                className="absolute border-t border-black"
+                className="absolute border-t border-slate-200"
                 style={{
                   top: i * 30,
                   left: 0,

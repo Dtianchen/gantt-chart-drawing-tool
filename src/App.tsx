@@ -112,8 +112,8 @@ export default function App() {
     <div className="h-dvh flex flex-col bg-white">
       {/* 顶部标题 */}
       <div className="shrink-0 mx-2 mt-2 rounded-xl bg-gradient-to-r from-[#5b8def] via-[#7c6fd6] to-[#9366c9] px-4 py-4 text-center shadow-sm">
-        <h1 className="text-lg font-bold text-white tracking-wider">甘特图绘制工具</h1>
-        <p className="text-xs text-white/80 mt-1 tracking-wide">任务管理与项目进度可视化</p>
+        <h1 className="text-lg font-bold text-white tracking-wider">进度计划甘特图绘制工具</h1>
+        <p className="text-xs text-white/80 mt-1 tracking-wide">让绘制甘特图变得简单</p>
       </div>
 
       {/* 头部 */}
