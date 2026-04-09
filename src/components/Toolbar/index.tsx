@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
-import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate } from 'lucide-react'
+import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X } from 'lucide-react'
 import { TimeScale } from '../../types'
 import { useGanttExport } from '../../hooks/useGanttExport'
 import dayjs from 'dayjs'
@@ -49,6 +49,7 @@ export default function Toolbar({
 }: ToolbarProps) {
   const { exportGanttAsImage } = useGanttExport()
   const [showTemplates, setShowTemplates] = useState(false)
+  const [confirmTemplate, setConfirmTemplate] = useState<TemplateOption | null>(null)
 
   const handleExport = useCallback(async () => {
     if (exportRef.current) {
@@ -65,11 +66,21 @@ export default function Toolbar({
   }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays])
 
   const handleSelectTemplate = useCallback((templateId: string) => {
-    if (window.confirm(`确定要加载「${TEMPLATE_OPTIONS.find(t => t.id === templateId)?.name}」吗？当前数据将被替换。`)) {
-      onLoadTemplate?.(templateId)
+    const tpl = TEMPLATE_OPTIONS.find(t => t.id === templateId)
+    if (tpl) setConfirmTemplate(tpl)
+  }, [])
+
+  const handleConfirmLoad = useCallback(() => {
+    if (confirmTemplate) {
+      onLoadTemplate?.(confirmTemplate.id)
+      setConfirmTemplate(null)
       setShowTemplates(false)
     }
-  }, [onLoadTemplate])
+  }, [confirmTemplate, onLoadTemplate])
+
+  const handleCancelConfirm = useCallback(() => {
+    setConfirmTemplate(null)
+  }, [])
 
   const btnBase = "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer active:scale-[0.97]"
 
@@ -166,6 +177,67 @@ export default function Toolbar({
         <HelpCircle size={15} />
         帮助
       </button>
+
+      {/* 模板确认弹窗 */}
+      {confirmTemplate && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={handleCancelConfirm}>
+          {/* 遮罩 */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+
+          {/* 弹窗内容 */}
+          <div
+            className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 标题栏 - 蓝紫渐变 */}
+            <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-[#5b8def] via-[#7c6fd6] to-[#9366c9]">
+              <AlertTriangle size={20} className="text-white/90 shrink-0" />
+              <h2 className="text-base font-bold text-white">加载模板确认</h2>
+              <button
+                onClick={handleCancelConfirm}
+                className="ml-auto p-1 rounded-lg hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* 内容区 */}
+            <div className="px-5 py-4 space-y-3">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                确定要加载模板 <span className="font-semibold text-violet-600">{confirmTemplate.name}</span> 吗？
+              </p>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                当前所有任务数据将被替换为模板数据，此操作不可撤销。
+              </p>
+
+              {/* 模板信息卡片 */}
+              <div className="flex items-center gap-2.5 p-3 bg-violet-50 rounded-lg border border-violet-100">
+                <LayoutTemplate size={18} className="shrink-0 text-violet-500" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-800">{confirmTemplate.name}</p>
+                  <p className="text-xs text-slate-500 mt-0.5">{confirmTemplate.description}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 底部按钮 */}
+            <div className="px-5 py-4 bg-slate-50/80 border-t border-slate-100 flex gap-3">
+              <button
+                onClick={handleCancelConfirm}
+                className="flex-1 py-2 bg-white hover:bg-slate-100 text-slate-600 font-medium rounded-lg border border-slate-200 transition-colors cursor-pointer text-sm"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleConfirmLoad}
+                className="flex-1 py-2 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all cursor-pointer text-sm shadow-sm"
+              >
+                确认加载
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
