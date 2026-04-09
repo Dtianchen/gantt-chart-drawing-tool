@@ -511,9 +511,9 @@ export const mockTasks: Task[] = [
   {
     id: 'task-62',
     name: '项目复盘总结与经验沉淀',
-    duration: 3,
+    duration: 2,
     startDate: '2026-10-03',
-    endDate: '2026-10-05',
+    endDate: '2026-10-04',
     color: 'purple',
   },
 ]
