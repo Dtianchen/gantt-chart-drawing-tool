@@ -9,7 +9,7 @@ function createWindow() {
     height: 900,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Gantt Tool',
+    title: 'Gantt Tool v1.0.5',
     icon: path.join(__dirname, '..', 'build', 'icon.ico'),
     webPreferences: {
       nodeIntegration: false,
