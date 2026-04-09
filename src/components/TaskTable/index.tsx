@@ -65,7 +65,7 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
               ))
             ) : (
               <div className={`flex items-center justify-center h-full text-slate-400 ${scale === 'month' ? 'text-xs' : 'text-sm'}`}>
-                暂无任务，点击上方"添加任务"按钮开始
+                暂无任务，点击上方"添加任务"按钮开始或选择模板填充数据
               </div>
             )}
           </div>
