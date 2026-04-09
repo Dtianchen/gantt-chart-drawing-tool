@@ -25,7 +25,7 @@ export default function ProjectHeader({
       </div>
 
       {/* 第二行：项目名称 + 开始时间 + 结束时间 + 计划工期 */}
-      <div className="h-9 flex items-center gap-2 px-[26px] md:px-[34px] border-t border-slate-200 text-xs">
+      <div className="h-9 flex items-center gap-2 px-[26px] md:px-[34px] border-t border-slate-200 text-sm">
         <div className="flex items-center gap-1 shrink-0">
           <Pencil size={12} className="text-gray-400 shrink-0" />
           <input
