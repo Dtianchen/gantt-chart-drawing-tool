@@ -22,6 +22,7 @@
 | **数据持久化** | 使用 localStorage 自动保存，刷新不丢失 |
 | **桌面应用** | Electron 打包为 Windows EXE，关闭窗口即完全退出 |
 | **内置 Web 服务** | 便携版 Nginx，一键启动本地 Web 版本 |
+| **帮助面板** | 内置使用指南与键盘快捷键说明 |
 
 ---
 
@@ -142,8 +143,8 @@ npm run electron:build
 
 | 文件 | 类型 | 说明 |
 |------|------|------|
-| `进度工具 Setup 1.0.1.exe` | NSIS 安装版 | 双击安装，创建桌面快捷方式 |
-| `进度工具 1.0.1.exe` | Portable 便携版 | 无需安装，直接运行，关闭即退出 |
+| `进度工具 Setup 1.0.5.exe` | NSIS 安装版 | 双击安装，创建桌面快捷方式 |
+| `进度工具 1.0.5.exe` | Portable 便携版 | 无需安装，直接运行，关闭即退出 |
 
 ---
 
@@ -187,8 +188,8 @@ npm run electron:build
 
 ```
 进度工具/
-├── src/                          # 源代码（20个文件）
-│   ├── components/               # React 组件（11个）
+├── src/                          # 源代码（19个文件）
+│   ├── components/               # React 组件（12个）
 │   │   ├── GanttChart/           # 甘特图主容器
 │   │   ├── GanttTimeline/        # 时间轴 + 任务条区域
 │   │   ├── TaskTable/            # 左侧任务列表表格
@@ -198,7 +199,8 @@ npm run electron:build
 │   │   ├── ProjectHeader/        # 项目头部信息
 │   │   ├── Toolbar/              # 工具栏（添加/导出/缩放/今日线）
 │   │   ├── TaskAddModal/         # 添加任务弹窗
-│   │   └── TaskEditModal/        # 编辑任务弹窗
+│   │   ├── TaskEditModal/        # 编辑任务弹窗
+│   │   └── HelpModal/            # 帮助面板（快捷键、使用说明）
 │   ├── hooks/                    # 自定义 Hooks（3个）
 │   ├── utils/dateUtils.ts        # 日期计算工具函数
 │   ├── types/index.ts            # TypeScript 类型定义
@@ -244,6 +246,7 @@ npm run electron:build
 4. **调整时间**：拖拽任务条的左边缘（开始日期）或右边缘（结束日期）
 5. **排序任务**：拖拽任务行左侧 ⋮ 图标上下拖动调整顺序
 6. **导出图片**：点击工具栏「导出图片」按钮下载 PNG
+7. **打开帮助**：点击标题栏「?」按钮查看快捷键与使用说明
 
 ### 快捷操作
 
@@ -285,7 +288,7 @@ npm run electron:build
 
 **A:** 有两种方案：
 
-1. **使用 EXE 桌面应用**（推荐） — 直接运行 `dist-exe/` 目录中的 EXE 文件，已内置 Chromium 内核，无需任何环境
+1. **使用 EXE 桌面应用**（推荐） — 直接运行 `dist-exe/win-unpacked/` 目录中的 EXE 文件，已内置 Chromium 内核，无需任何环境
 2. **安装 Node.js** — 访问 [nodejs.org](https://nodejs.org/) 下载 LTS 版本（v20+），安装时勾选"添加到 PATH"。安装后即可使用三个 `.bat` 一键脚本
 
 > 验证 Node.js 是否可用：打开终端输入 `node -v` 和 `npm -v`，显示版本号即正常。
