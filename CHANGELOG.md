@@ -4,6 +4,38 @@
 
 ---
 
+## [1.0.4] - 2026-04-09
+
+### 修复
+
+- **EXE 关闭后进程残留**（窗口关闭但 Electron 主进程不退出）
+  - 根因：`main.cjs` 中窗口关闭事件只设了 `mainWindow = null`，未调用 `app.quit()`
+  - 修复：在 `closed` 事件中增加 `app.quit()`；统一 `window-all-closed` 为所有平台退出
+  - 影响：关闭 EXE 窗口后进程立即终止，不再锁定文件
+
+### 清理
+
+删除以下无用文件和目录：
+
+| 文件/目录 | 原因 |
+|-----------|------|
+| `start.bat` | 被「启动进度工具.bat」替代 |
+| `build.bat` | 被「构建生产版本.bat」替代 |
+| `gen-icon.cjs` | 一次性图标生成脚本（icon.ico 已生成） |
+| `dist-release/` | 旧打包输出目录（已换用 output/） |
+| `runtime/` | 便携版 Node.js v20 运行时（~100MB，已被 EXE 替代） |
+| `dist/` | 可重新生成的 Web 构建产物 |
+
+### 变更
+
+| 文件 | 变更 |
+|------|------|
+| `electron/main.cjs` | 窗口关闭时调用 `app.quit()` 防止进程残留 |
+| `.gitignore` | 新增 output/、release/、runtime/、gen-icon.cjs 忽略规则 |
+| `打包EXE.bat` | 打包前自动 taskkill 清理残留进程 |
+
+---
+
 ## [1.0.3] - 2026-04-08
 
 ### 新增
@@ -26,28 +58,20 @@
 - **CommonJS / ES Module 冲突**（`require is not defined`）
   - 根因：`package.json` 设置 `"type": "module"` 导致 `.js` 文件被当作 ES 模块
   - 修复：Electron 主进程文件重命名为 `.cjs` 扩展名（`main.js` → `main.cjs`, `preload.js` → `preload.cjs`）
-- **BAT 脚本 Unicode 制表符乱码** (`'╗═══' is not recognized`)
+- **BAT 脚本 Unicode 制表符乱码**
   - 修复：移除 Unicode 绘图字符，改用 ASCII 安全字符 (`=`)
-- **GitHub 网络超时**（国内环境无法下载 winCodeSign）
-  - 修复：添加淘宝镜像加速 + 配置 `forceCodeSigning: false` 跳过代码签名
+- **GitHub 网络超时**（国内无法下载 winCodeSign）
+  - 修复：添加淘宝镜像加速 + 配置 `forceCodeSigning: false`
 
 ### 变更
 
 | 文件 | 变更 |
 |------|------|
 | `vite.config.ts` | 新增 `base: './'` |
-| `electron/main.js` → `electron/main.cjs` | 重命名（ESM/CJS 兼容） |
-| `electron/preload.js` → `electron/preload.cjs` | 重命名（简化预加载脚本） |
-| `package.json` | main 入口改为 `electron/main.cjs`；新增跳过签名配置 |
-| `打包EXE.bat` | 自动清理进程 + 镜像加速 + 乱码修复 |
+| `electron/` | `.js` → `.cjs`（ESM/CJS 兼容） |
+| `package.json` | main 入口 + 跳过签名配置 |
+| `打包EXE.bat` / `启动进度工具.bat` / `构建生产版本.bat` | 全部重写修复乱码 |
 | `src/data/mockData.ts` | 替换为180天软件项目数据 |
-
-### 提交记录
-
-| 提交 ID | 说明 |
-|---------|------|
-| 待提交 | fix: 修复 EXE 空白页面、文件锁定、CJS/ESM 冲突等问题 |
-| 待提交 | feat: 替换模拟数据为180天软件项目开发流程 |
 
 ---
 
@@ -55,33 +79,9 @@
 
 ### 新增
 
-- **Electron 桌面应用打包**
-  - 支持 Windows NSIS 安装版 + Portable 便携版
-  - 内置 Chromium 内核，无需浏览器即可运行
-- **一键启动/构建脚本**
-  - `start.bat` — 开发模式自动检测依赖并启动
-  - `build.bat` — 自动检测依赖并执行构建
-  - `启动进度工具.bat` / `构建生产版本.bat` — 便携版专用脚本
-  - `打包EXE.bat` — Electron EXE 打包脚本
-
-### 新增文件
-
-| 文件 | 说明 |
-|------|------|
-| `electron/main.js` | Electron 主进程（窗口管理） |
-| `electron/preload.js` | 安全预加载脚本 |
-| `启动进度工具.bat` | 便携版一键启动 |
-| `构建生产版本.bat` | 便携版一键构建 |
-| `打包EXE.bat` | EXE 打包脚本 |
-| `README.md` | 完整项目说明文档 |
-
-### 部署方式
-
-| 方式 | 适用场景 | 输出目录 |
-|------|---------|---------|
-| Web 版 | 部署到 Nginx/Vercel/Gitee Pages | `dist/` |
-| EXE 安装版 | 正式发布，像普通软件安装 | `output/` |
-| EXE 便携版 | U盘携带，无需安装直接运行 | `output/` |
+- **Electron 桌面应用打包** — NSIS 安装版 + Portable 便携版
+- **一键脚本** — 启动进度工具.bat / 构建生产版本.bat / 打包EXE.bat
+- **完整项目文档** — README.md / CHANGELOG.md
 
 ---
 
@@ -89,14 +89,7 @@
 
 ### 修复
 
-- **TypeScript 类型错误**
-  - `GanttChart/index.tsx` — 修复 `RefObject<HTMLDivElement | null>` 类型不兼容
-  - `TaskEditModal/index.tsx` — 修复 `task` 可能为 null 的空值检查缺失
-
-### 构建
-
-- 生产构建成功：HTML (0.48 kB) + CSS (26.09 kB) + JS (~255 kB)
-- Gzip 压缩后总计约 **86 kB**
+- TypeScript 类型错误（GanttChart RefObject、TaskEditModal 空值检查）
 
 ---
 
@@ -104,22 +97,7 @@
 
 ### 新增
 
-- 项目初始化完成，甘特图应用首次发布
-
-#### 功能清单
-
-- 甘特图时间轴视图展示任务进度条
-- 任务 CRUD 操作（添加/编辑/删除）
-- 拖拽排序和拖拽调整日期
-- 工程标尺刻度（每5天）+ 工期统计
-- 今日线标记 + 周末高亮显示
-- 日/周/月三种时间粒度缩放切换
-- PNG 图片导出功能
-- localStorage 数据持久化
-
-#### 技术栈
-
-React 18 + TypeScript 5 + Vite 5 + TailwindCSS 3 + @dnd-kit + dayjs + html-to-image + lucide-react
+项目首次发布：甘特图时间轴视图、任务 CRUD、拖拽排序/调日期、工程标尺、工期统计、今日线、周末高亮、缩放切换、PNG 导出、localStorage 持久化。
 
 ---
 
@@ -129,9 +107,10 @@ React 18 + TypeScript 5 + Vite 5 + TailwindCSS 3 + @dnd-kit + dayjs + html-to-im
 |------|------|------|---------|
 | 1.0.0 | 2026-04-08 | Major | 首次发布，完整功能上线 |
 | 1.0.1 | 2026-04-08 | Patch | 修复 TS 类型错误 |
-| 1.0.2 | 2026-04-08 | Minor | 新增 Electron 打包、一键脚本 |
+| 1.0.2 | 2026-04-08 | Minor | 新增 Electron 打包、一键脚本、文档 |
 | 1.0.3 | 2026-04-08 | Patch | 修复 EXE 空白/锁定/签名问题；新增强大示例数据 |
+| 1.0.4 | 2026-04-09 | Patch | 修复进程残留 bug；清理无用文件（释放~100MB） |
 
 ---
 
-*文档最后更新：2026-04-08*
+*文档最后更新：2026-04-09*

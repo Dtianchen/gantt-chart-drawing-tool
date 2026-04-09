@@ -22,6 +22,8 @@ function createWindow() {
 
   mainWindow.on('closed', () => {
     mainWindow = null
+    // Ensure full process termination on all platforms
+    app.quit()
   })
 }
 
@@ -32,5 +34,5 @@ app.on('activate', () => {
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  app.quit()
 })

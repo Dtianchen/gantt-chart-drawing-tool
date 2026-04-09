@@ -20,7 +20,7 @@
 | **周末高亮** | 自动标识周六/周日，方便识别工作日 |
 | **导出图片** | 将甘特图导出为 PNG 图片保存/分享 |
 | **数据持久化** | 使用 localStorage 自动保存，刷新不丢失 |
-| **桌面应用** | Electron 打包为 Windows EXE，无需浏览器即可运行 |
+| **桌面应用** | Electron 打包为 Windows EXE，关闭窗口即完全退出 |
 
 ---
 
@@ -53,7 +53,7 @@ npm run dev
 |------|------|
 | `启动进度工具.bat` | 开发模式（自动检测并安装依赖） |
 | `构建生产版本.bat` | 构建生产版本到 dist/ 目录 |
-| `打包EXE.bat` | 打包 Windows 桌面应用到 output/ 目录 |
+| `打包EXE.bat` | 打包 Windows 桌面应用到 output/ 目录（含镜像加速+自动清进程） |
 
 > 双击 `.bat` 文件即可运行，无需手动输入命令。
 
@@ -74,8 +74,11 @@ npm run build
 像普通软件一样安装或直接运行：
 
 ```bash
+# 方式A：命令行
 npm run electron:build
-# 或双击 "打包EXE.bat"
+
+# 方式B：双击脚本
+"打包EXE.bat"
 ```
 
 产物位于 `output/` 目录：
@@ -83,7 +86,7 @@ npm run electron:build
 | 文件 | 类型 | 说明 |
 |------|------|------|
 | `进度工具 Setup 1.0.1.exe` | NSIS 安装版 | 双击安装，创建桌面快捷方式 |
-| `进度工具 1.0.1.exe` | Portable 便携版 | 无需安装，直接运行，可放 U 盘携带 |
+| `进度工具 1.0.1.exe` | Portable 便携版 | 无需安装，直接运行，关闭即退出 |
 
 ---
 
@@ -127,47 +130,43 @@ npm run electron:build
 
 ```
 进度工具/
-├── src/
-│   ├── components/        # React 组件（11个）
-│   │   ├── GanttChart/    # 甘特图主容器
-│   │   ├── GanttTimeline/ # 时间轴 + 任务条区域
-│   │   ├── TaskTable/     # 左侧任务列表表格
-│   │   ├── TaskRow/       # 单行任务组件
-│   │   ├── TaskBar/       # 任务进度条（可拖拽调整）
-│   │   ├── TimeScaleHeader/ # 时间刻度表头
-│   │   ├── ProjectHeader/ # 项目头部信息
-│   │   ├── Toolbar/       # 工具栏（添加/导出/缩放/今日线）
-│   │   ├── TaskAddModal/  # 添加任务弹窗
-│   │   └── TaskEditModal/ # 编辑任务弹窗
-│   ├── hooks/
-│   │   ├── useTaskManager.ts      # 任务 CRUD 操作
-│   │   ├── useLocalStorage.ts     # localStorage 数据持久化
-│   │   └── useGanttExport.ts      # PNG 图片导出功能
-│   ├── utils/dateUtils.ts         # 日期计算工具函数
-│   ├── types/index.ts             # TypeScript 类型定义
-│   ├── data/mockData.ts           # 初始模拟数据（180天软件项目）
-│   ├── App.tsx                    # 主应用组件
-│   ├── main.tsx                   # React 入口
-│   └── index.css                  # 全局样式
-├── electron/
-│   ├── main.cjs                   # Electron 主进程（CommonJS）
-│   └── preload.cjs                # 安全预加载脚本
+├── src/                          # 源代码（20个文件）
+│   ├── components/               # React 组件（11个）
+│   │   ├── GanttChart/           # 甘特图主容器
+│   │   ├── GanttTimeline/        # 时间轴 + 任务条区域
+│   │   ├── TaskTable/            # 左侧任务列表表格
+│   │   ├── TaskRow/              # 单行任务组件
+│   │   ├── TaskBar/              # 任务进度条（可拖拽调整）
+│   │   ├── TimeScaleHeader/      # 时间刻度表头
+│   │   ├── ProjectHeader/        # 项目头部信息
+│   │   ├── Toolbar/              # 工具栏（添加/导出/缩放/今日线）
+│   │   ├── TaskAddModal/         # 添加任务弹窗
+│   │   └── TaskEditModal/        # 编辑任务弹窗
+│   ├── hooks/                    # 自定义 Hooks（3个）
+│   ├── utils/dateUtils.ts        # 日期计算工具函数
+│   ├── types/index.ts            # TypeScript 类型定义
+│   ├── data/mockData.ts          # 初始模拟数据（180天软件项目）
+│   ├── App.tsx                   # 主应用组件
+│   ├── main.tsx                  # React 入口
+│   └── index.css                 # 全局样式
+├── electron/                     # Electron 配置
+│   ├── main.cjs                  # 主进程（CommonJS，关闭窗口自动退出）
+│   └── preload.cjs               # 安全预加载脚本
 ├── build/
-│   └── icon.ico                   # Windows 应用图标（256x256 蓝色）
-├── dist/                          # Web 生产构建产物
-├── output/                        # EXE 打包输出目录（运行 打包EXE.bat 后生成）
-├── public/favicon.svg             # 网页图标
-├── index.html                     # HTML 入口
-├── package.json                   # 项目配置 & Electron Builder 配置
-├── vite.config.ts                 # Vite 配置（含 base: './' 相对路径）
-├── tailwind.config.js             # TailwindCSS 配置
-├── tsconfig.json                  # TypeScript 编译配置
-├── postcss.config.js              # PostCSS 配置
-├── CHANGELOG.md                   # 版本更新日志
-├── README.md                      # 本文件
-├── 启动进度工具.bat                # 开发模式一键启动
-├── 构建生产版本.bat                # 构建生产版本一键脚本
-└── 打包EXE.bat                     # Electron EXE 打包一键脚本（含镜像加速）
+│   └── icon.ico                  # Windows 应用图标（256x256 蓝色）
+├── public/favicon.svg            # 网页图标
+├── index.html                    # HTML 入口
+├── package.json                  # 项目配置 & Electron Builder 配置
+├── vite.config.ts                # Vite 配置（base: './' 相对路径）
+├── tailwind.config.js            # TailwindCSS 配置
+├── tsconfig.json                 # TypeScript 编译配置
+├── postcss.config.js             # PostCSS 配置
+├── .gitignore                    # Git 忽略规则
+├── CHANGELOG.md                  # 版本更新日志
+├── README.md                     # 本文件
+├── 启动进度工具.bat               # 开发模式一键启动
+├── 构建生产版本.bat               # 构建生产版本一键脚本
+└── 打包EXE.bat                    # Electron EXE 打包（含镜像+自动清进程）
 ```
 
 ---
@@ -193,16 +192,20 @@ npm run electron:build
 
 ## 常见问题
 
+### Q: EXE 关闭后进程还在后台运行？
+
+**A:** 此问题已在 v1.0.4 中修复。现在关闭窗口会立即调用 `app.quit()` 终止整个进程，不会残留。如果使用旧版 EXE 仍有此问题，请在任务管理器中手动结束进程。
+
 ### Q: EXE 运行后是空白页面？
 
-**A:** 已通过 Vite 相对路径配置修复（`vite.config.ts` 中设置 `base: './'`）。如果仍有问题，请确认使用最新版本的打包产物。
+**A:** 已通过 Vite 相对路径配置修复（`vite.config.ts` 设置 `base: './'`）。请确认使用 v1.0.3 或更高版本的打包产物。
 
 ### Q: 打包时提示"文件被占用"？
 
-**A:** 这是之前运行的 EXE 进程未完全退出导致的。解决方案：
-1. 按 `Ctrl+Shift+Esc` 打开任务管理器
-2. 结束所有「进度工具.exe」或「electron.exe」进程
-3. 或直接重新双击 `打包EXE.bat`（脚本会自动清理残留进程）
+**A:** `打包EXE.bat` 已内置自动清理逻辑。如果仍报错：
+1. 确保已关闭所有正在运行的「进度工具.exe」
+2. 按 `Ctrl+Shift+Esc` 打开任务管理器确认无残留进程
+3. 如果还不行，重启电脑后再打包
 
 ### Q: 导出的图片不完整？
 
@@ -217,7 +220,7 @@ npm run electron:build
 
 ### Q: 没有 Node.js 环境怎么办？
 
-**A:** 直接使用打包好的 EXE 桌面应用（`output/` 目录下的 `进度工具 1.0.1.exe`），已内置 Chromium 内核，无需任何环境。
+**A:** 直接使用打包好的 EXE 桌面应用（`output/` 目录），已内置 Chromium 内核，无需任何环境。
 
 ---
 
@@ -225,10 +228,11 @@ npm run electron:build
 
 查看完整变更记录：[CHANGELOG.md](./CHANGELOG.md)
 
-| 版本 | 日期 | 说明 |
-|------|------|------|
-| [1.0.3](./CHANGELOG.md#103--2026-04-08) | 2026-04-08 | 修复 EXE 空白、文件锁定；新增 180天软件项目数据 |
-| [1.0.2](./CHANGELOG.md#102--2026-04-08) | 2026-04-08 | 新增 Electron 打包、便携版、一键脚本 |
+| 版本 | 日期 | 关键变更 |
+|------|------|---------|
+| [1.0.4](./CHANGELOG.md#104--2026-04-09) | 2026-04-09 | 修复进程残留 bug；清理无用文件释放 ~100MB |
+| [1.0.3](./CHANGELOG.md#103--2026-04-08) | 2026-04-08 | 修复 EXE 空白/锁定/签名；新增180天示例数据 |
+| [1.0.2](./CHANGELOG.md#102--2026-04-08) | 2026-04-08 | 新增 Electron 打包、一键脚本、完整文档 |
 | [1.0.1](./CHANGELOG.md#101--2026-04-08) | 2026-04-08 | 修复 TypeScript 类型错误 |
 | [1.0.0](./CHANGELOG.md#100--2026-04-08) | 2026-04-08 | 首次发布 |
 
