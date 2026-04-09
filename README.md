@@ -49,25 +49,41 @@ npm run dev
 
 ### 一键脚本
 
-| 脚本 | 用途 |
-|------|------|
-| `启动进度工具.bat` | 开发模式（自动检测并安装依赖） |
-| `构建生产版本.bat` | 构建生产版本到 dist/ 目录 |
-| `打包EXE.bat` | 打包 Windows 桌面应用到 output/ 目录（含镜像加速+自动清进程） |
+| 脚本 | 用途 | 依赖 |
+|------|------|------|
+| `启动进度工具.bat` | 开发模式（自动安装依赖 + 自动构建 + 启动 dev server） | 系统已装 Node.js |
+| `构建生产版本.bat` | 构建生产版本到 `dist/` 目录（Web 静态文件） | 系统已装 Node.js |
+| `打包EXE.bat` | 打包 Windows 桌面应用到 `output/` 目录（含镜像加速 + 自动清进程） | 系统已装 Node.js |
 
-> 双击 `.bat` 文件即可运行，无需手动输入命令。
+> 双击 `.bat` 文件即可运行，无需手动输入命令。三个脚本均使用**系统 Node.js**（需确保 `node` 和 `npm` 在系统 PATH 中可用）。
 
 ---
 
 ## 部署方式
 
-### 方式一：Web 版部署
+### 方式一：Web 版部署（静态文件）
 
 ```bash
+# 方式A：命令行
 npm run build
-# 输出目录：dist/
-# 可部署到任意静态服务器：Nginx / Vercel / Gitee Pages
+
+# 方式B：双击脚本
+"构建生产版本.bat"
 ```
+
+输出目录：`dist/`，包含完整的 Web 静态文件：
+
+| 文件 | 说明 |
+|------|------|
+| `index.html` | 入口页面（JS/CSS 使用相对路径引用） |
+| `assets/index-*.js` | 打包后的 JavaScript bundle |
+| `assets/index-*.css` | 打包后的样式文件 |
+
+可部署到任意静态服务器：
+- **Nginx** — 将 `dist/` 内容放到 `html/` 目录
+- **Vercel / Netlify** — 设置构建命令为 `npm run build`，输出目录为 `dist`
+- **Gitee Pages** — 上传 `dist/` 内容到仓库的 `pages` 分支
+- **本地预览** — `npx serve dist` 或 `npx vite preview`
 
 ### 方式二：桌面应用 EXE
 
@@ -220,7 +236,12 @@ npm run electron:build
 
 ### Q: 没有 Node.js 环境怎么办？
 
-**A:** 直接使用打包好的 EXE 桌面应用（`output/` 目录），已内置 Chromium 内核，无需任何环境。
+**A:** 有两种方案：
+
+1. **使用 EXE 桌面应用**（推荐） — 直接运行 `output/` 目录中的 EXE 文件，已内置 Chromium 内核，无需任何环境
+2. **安装 Node.js** — 访问 [nodejs.org](https://nodejs.org/) 下载 LTS 版本（v20+），安装时勾选"添加到 PATH"。安装后即可使用三个 `.bat` 一键脚本
+
+> 验证 Node.js 是否可用：打开终端输入 `node -v` 和 `npm -v`，显示版本号即正常。
 
 ---
 
