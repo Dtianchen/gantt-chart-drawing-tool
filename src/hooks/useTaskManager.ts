@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { Task, TaskColor } from '../types'
 import { useLocalStorage } from './useLocalStorage'
 import { mockProject } from '../data/mockData'
+import { TEMPLATES } from '../data/templates'
 import { addDays, getDaysBetween } from '../utils/dateUtils'
 
 let taskCounter = 100
@@ -79,6 +80,15 @@ export function useTaskManager() {
     setProject(mockProject)
   }, [setProject])
 
+  const loadTemplate = useCallback((templateId: string) => {
+    const template = TEMPLATES.find(t => t.id === templateId)
+    if (template) {
+      // 清除旧数据，加载新模板
+      window.localStorage.removeItem('gantt_project')
+      setProject({ ...template.project })
+    }
+  }, [setProject])
+
   return {
     projectName: project.name,
     tasks: project.tasks,
@@ -89,5 +99,6 @@ export function useTaskManager() {
     resizeTask,
     updateProjectName,
     resetProject,
+    loadTemplate,
   }
 }

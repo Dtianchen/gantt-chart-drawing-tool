@@ -32,7 +32,7 @@ export default function App() {
     reorderTasks,
     resizeTask,
     updateProjectName,
-    resetProject,
+    loadTemplate,
   } = useTaskManager()
 
   const dayWidth = scale === 'week' ? DAY_WIDTH_WEEK : DAY_WIDTH_MONTH
@@ -128,7 +128,7 @@ export default function App() {
             onToggleScale={toggleScale}
             onToggleTodayLine={toggleTodayLine}
             onShowHelp={handleShowHelp}
-            onReset={resetProject}
+            onLoadTemplate={loadTemplate}
             scale={scale}
             showTodayLine={showTodayLine}
             exportRef={exportRef}
