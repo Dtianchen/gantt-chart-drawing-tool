@@ -35,46 +35,27 @@ const systemIntegrationTemplate: Template = {
   project: {
     name: '系统集成项目',
     tasks: [
-      // ---- 阶段 1：前期准备与立项（第 1-13 天）----
-      { id: 'si-1', name: '项目立项申请与审批', duration: 5, startDate: offsetDays(0), endDate: offsetDays(4), color: 'purple' },
-      { id: 'si-2', name: '组建项目团队与分工', duration: 3, startDate: offsetDays(3), endDate: offsetDays(5), color: 'purple' },
-      { id: 'si-3', name: '现场勘察与需求初步调研', duration: 7, startDate: offsetDays(6), endDate: offsetDays(12), color: 'purple' },
-      { id: 'si-4', name: '项目启动会与里程碑确认', duration: 2, startDate: offsetDays(12), endDate: offsetDays(13), color: 'purple' },
+      // 阶段 1：前期准备与立项（~13天）
+      { id: 'si-1', name: '前期准备与立项阶段', duration: 13, startDate: offsetDays(0), endDate: offsetDays(12), color: 'purple' },
 
-      // ---- 阶段 2：方案设计（第 11-26 天）----
-      { id: 'si-5', name: '总体技术方案设计', duration: 8, startDate: offsetDays(10), endDate: offsetDays(17), color: 'blue' },
-      { id: 'si-6', name: '系统架构设计与评审', duration: 6, startDate: offsetDays(16), endDate: offsetDays(21), color: 'blue' },
-      { id: 'si-7', name: '详细实施方案编写', duration: 7, startDate: offsetDays(20), endDate: offsetDays(26), color: 'blue' },
-      { id: 'si-8', name: '方案评审与客户确认', duration: 3, startDate: offsetDays(25), endDate: offsetDays(27), color: 'blue' },
+      // 阶段 2：方案设计（~18天）
+      { id: 'si-2', name: '方案设计阶段', duration: 18, startDate: offsetDays(13), endDate: offsetDays(30), color: 'blue' },
 
-      // ---- 阶段 3：采购与到货（第 24-44 天）----
-      { id: 'si-9', name: '设备/软件采购清单确认', duration: 4, startDate: offsetDays(23), endDate: offsetDays(26), color: 'orange' },
-      { id: 'si-10', name: '供应商招标与合同签订', duration: 8, startDate: offsetDays(26), endDate: offsetDays(33), color: 'orange' },
-      { id: 'si-11', name: '设备到货验收与入库', duration: 10, startDate: offsetDays(34), endDate: offsetDays(43), color: 'orange' },
-      { id: 'si-12', name: '环境准备（机房/网络/电力）', duration: 7, startDate: offsetDays(36), endDate: offsetDays(42), color: 'orange' },
+      // 阶段 3：采购与到货（~21天）
+      { id: 'si-3', name: '采购与到货阶段', duration: 21, startDate: offsetDays(31), endDate: offsetDays(51), color: 'orange' },
 
-      // ---- 阶段 4：实施部署（第 40-65 天）----
-      { id: 'si-13', name: '硬件安装与布线', duration: 10, startDate: offsetDays(39), endDate: offsetDays(48), color: 'green' },
-      { id: 'si-14', name: '系统平台安装与配置', duration: 8, startDate: offsetDays(47), endDate: offsetDays(54), color: 'green' },
-      { id: 'si-15', name: '系统集成联调', duration: 8, startDate: offsetDays(53), endDate: offsetDays(60), color: 'green' },
-      { id: 'si-16', name: '数据迁移与初始化', duration: 6, startDate: offsetDays(59), endDate: offsetDays(64), color: 'green' },
+      // 阶段 4：实施部署（~26天）
+      { id: 'si-4', name: '实施部署阶段', duration: 26, startDate: offsetDays(52), endDate: offsetDays(77), color: 'green' },
 
-      // ---- 阶段 5：测试与验证（第 62-76 天）----
-      { id: 'si-17', name: '功能测试与用例执行', duration: 8, startDate: offsetDays(61), endDate: offsetDays(68), color: 'red' },
-      { id: 'si-18', name: '性能测试与压力测试', duration: 5, startDate: offsetDays(67), endDate: offsetDays(71), color: 'red' },
-      { id: 'si-19', name: '用户验收测试（UAT）', duration: 7, startDate: offsetDays(70), endDate: offsetDays(76), color: 'red' },
-      { id: 'si-20', name: '问题修复与回归验证', duration: 5, startDate: offsetDays(75), endDate: offsetDays(79), color: 'red' },
+      // 阶段 5：测试与验证（~18天）
+      { id: 'si-5', name: '测试与验证阶段', duration: 18, startDate: offsetDays(68), endDate: offsetDays(85), color: 'red' },
 
-      // ---- 阶段 6：上线与交付（第 77-86 天）----
-      { id: 'si-21', name: '生产环境部署与切换', duration: 5, startDate: offsetDays(76), endDate: offsetDays(80), color: 'purple' },
-      { id: 'si-22', name: '用户培训与操作指导', duration: 4, startDate: offsetDays(79), endDate: offsetDays(82), color: 'purple' },
-      { id: 'si-23', name: '项目文档移交', duration: 3, startDate: offsetDays(82), endDate: offsetDays(84), color: 'purple' },
-      { id: 'si-24', name: '正式上线运行', duration: 2, startDate: offsetDays(85), endDate: offsetDays(86), color: 'purple' },
+      // 阶段 6：上线与交付（~11天）
+      { id: 'si-6', name: '上线与交付阶段', duration: 11, startDate: offsetDays(86), endDate: offsetDays(96), color: 'purple' },
 
-      // ---- 阶段 7：运维与售后（第 85-90+ 天）----
-      { id: 'si-25', name: '试运行期间监控与支持', duration: 7, startDate: offsetDays(84), endDate: offsetDays(90), color: 'orange' },
-      { id: 'si-26', name: '运维交接与服务移交', duration: 5, startDate: offsetDays(88), endDate: offsetDays(92), color: 'orange' },
-    ] as Task[],
+      // 阶段 7：运维与售后（持续）
+      { id: 'si-7', name: '运维与售后阶段', duration: 12, startDate: offsetDays(87), endDate: offsetDays(98), color: 'orange' },
+    ],
   },
 }
 
