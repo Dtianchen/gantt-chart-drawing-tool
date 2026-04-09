@@ -50,14 +50,14 @@ if %errorlevel% equ 0 (
     echo.
     echo ==========================================
     echo   Build Complete!
-    echo   Output: output\
+    echo   Output: dist-exe\
     echo   Files:
     echo     - Gantt-Tool Setup x.x.x.exe (Installer)
     echo     - Gantt-Tool x.x.x.exe (Portable)
     echo ==========================================
     
     :: Open output folder
-    explorer output
+    explorer dist-exe
 ) else (
     echo [ERROR] Packaging failed, check errors above
 )

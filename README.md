@@ -53,7 +53,7 @@ npm run dev
 |------|------|------|
 | `启动进度工具.bat` | 开发模式（自动安装依赖 + 自动构建 + 启动 dev server） | 系统已装 Node.js |
 | `构建生产版本.bat` | 构建生产版本到 `dist/` 目录（Web 静态文件） | 系统已装 Node.js |
-| `打包EXE.bat` | 打包 Windows 桌面应用到 `output/` 目录（含镜像加速 + 自动清进程） | 系统已装 Node.js |
+| `打包EXE.bat` | 打包 Windows 桌面应用到 `dist-exe/` 目录（含镜像加速 + 自动清进程） | 系统已装 Node.js |
 
 > 双击 `.bat` 文件即可运行，无需手动输入命令。三个脚本均使用**系统 Node.js**（需确保 `node` 和 `npm` 在系统 PATH 中可用）。
 
@@ -97,7 +97,7 @@ npm run electron:build
 "打包EXE.bat"
 ```
 
-产物位于 `output/` 目录：
+产物位于 `dist-exe/` 目录：
 
 | 文件 | 类型 | 说明 |
 |------|------|------|
@@ -238,7 +238,7 @@ npm run electron:build
 
 **A:** 有两种方案：
 
-1. **使用 EXE 桌面应用**（推荐） — 直接运行 `output/` 目录中的 EXE 文件，已内置 Chromium 内核，无需任何环境
+1. **使用 EXE 桌面应用**（推荐） — 直接运行 `dist-exe/` 目录中的 EXE 文件，已内置 Chromium 内核，无需任何环境
 2. **安装 Node.js** — 访问 [nodejs.org](https://nodejs.org/) 下载 LTS 版本（v20+），安装时勾选"添加到 PATH"。安装后即可使用三个 `.bat` 一键脚本
 
 > 验证 Node.js 是否可用：打开终端输入 `node -v` 和 `npm -v`，显示版本号即正常。
