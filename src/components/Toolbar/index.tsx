@@ -17,6 +17,7 @@ interface ToolbarProps {
   projectStartDate?: string
   projectEndDate?: string
   totalDays?: number
+  taskCount?: number
 }
 
 export default function Toolbar({
@@ -32,6 +33,7 @@ export default function Toolbar({
   projectStartDate = '',
   projectEndDate = '',
   totalDays = 0,
+  taskCount = 0,
 }: ToolbarProps) {
   const { exportGanttAsImage } = useGanttExport()
 
@@ -45,7 +47,7 @@ export default function Toolbar({
         startDate: projectStartDate,
         endDate: projectEndDate,
         totalDays,
-      })
+      }, taskCount)
     }
   }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays])
 

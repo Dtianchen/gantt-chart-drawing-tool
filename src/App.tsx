@@ -136,6 +136,7 @@ export default function App() {
             projectStartDate={projectDateRange.startDate}
             projectEndDate={projectDateRange.endDate}
             totalDays={totalDays}
+            taskCount={tasks.length}
           />
         }
       />
