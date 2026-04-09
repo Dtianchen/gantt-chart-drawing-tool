@@ -33,7 +33,7 @@ export default function ProjectHeader({
             value={projectName}
             onChange={(e) => onNameChange(e.target.value)}
             className="bg-transparent text-gray-800 font-semibold outline-none border-b border-transparent hover:border-gray-300 focus:border-blue-400 transition-colors min-w-[40px]"
-            style={{ width: Math.max(projectName.length * 12 + 6, 40) + 'px' }}
+            style={{ width: Math.max(projectName.length * 14 + 10, 50) + 'px' }}
             placeholder="项目名称"
           />
         </div>
