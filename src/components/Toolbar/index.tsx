@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react'
-import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle } from 'lucide-react'
+import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, Trash2 } from 'lucide-react'
 import { TimeScale } from '../../types'
 import { useGanttExport } from '../../hooks/useGanttExport'
 import dayjs from 'dayjs'
@@ -9,6 +9,7 @@ interface ToolbarProps {
   onToggleScale: () => void
   onToggleTodayLine: () => void
   onShowHelp: () => void
+  onReset?: () => void
   scale: TimeScale
   showTodayLine: boolean
   exportRef: React.RefObject<HTMLDivElement | null>
@@ -23,6 +24,7 @@ export default function Toolbar({
   onToggleScale,
   onToggleTodayLine,
   onShowHelp,
+  onReset,
   scale,
   showTodayLine,
   exportRef,
@@ -100,6 +102,21 @@ export default function Toolbar({
         <HelpCircle size={15} />
         帮助
       </button>
+
+      {onReset && (
+        <button
+          onClick={() => {
+            if (window.confirm('确定要重置所有数据吗？将恢复为初始示例数据，当前修改会丢失。')) {
+              onReset()
+            }
+          }}
+          className={`${btnBase} bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 hover:border-red-200`}
+          title="重置数据（恢复初始示例）"
+        >
+          <Trash2 size={14} />
+          重置
+        </button>
+      )}
     </div>
   )
 }

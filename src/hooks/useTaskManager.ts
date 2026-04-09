@@ -74,6 +74,11 @@ export function useTaskManager() {
     setProject(prev => ({ ...prev, name }))
   }, [setProject])
 
+  const resetProject = useCallback(() => {
+    window.localStorage.removeItem('gantt_project')
+    setProject(mockProject)
+  }, [setProject])
+
   return {
     projectName: project.name,
     tasks: project.tasks,
@@ -83,5 +88,6 @@ export function useTaskManager() {
     reorderTasks,
     resizeTask,
     updateProjectName,
+    resetProject,
   }
 }
