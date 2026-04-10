@@ -14,7 +14,19 @@ export interface Project {
   tasks: Task[]
 }
 
-export type TimeScale = 'week' | 'month'
+export type TimeScale = 'day' | 'custom'
+
+export const UNIT_WIDTH = 28 // 所有视图的刻度格子统一宽度
+
+export interface ScaleConfig {
+  label: string
+  daysPerUnit: number
+}
+
+export const SCALE_CONFIG: Record<TimeScale, ScaleConfig> = {
+  day: { label: '日视图', daysPerUnit: 1 },
+  custom: { label: '自定义', daysPerUnit: 0 }, // daysPerUnit 由运行时注入
+}
 
 export const TASK_COLORS: { value: TaskColor; label: string; bgClass: string }[] = [
   { value: 'red', label: '红色', bgClass: 'bg-task-red' },

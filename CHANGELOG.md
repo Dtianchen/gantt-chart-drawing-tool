@@ -4,7 +4,46 @@
 
 ---
 
-## [1.0.7] - 2026-04-09
+## [1.0.8] - 2026-04-10
+
+### 重构：视图系统
+
+- **移除周视图和月视图**，`TimeScale` 类型从 `'day' | 'week' | 'month' | 'custom'` 缩减为 `'day' | 'custom'`
+- **日视图**：逐日渲染，每格 28px（`dayWidth` = `UNIT_WIDTH / activeDaysPerUnit`）
+- **自定义视图**：单元模式，每格固定 28px 宽度，默认 2 天/格，可自定义 1-365 天/格
+- `SCALE_CONFIG` 移除 `week`/`month` 配置项；清理全项目 8 处残留的 `scale === 'month'` 死代码引用
+
+### 新功能
+
+- **时间轴表头改为三行结构**（总高 50px）：
+  - **第一行（14px）**：年月分组（日视图 `YYYY.M`，自定义视图 `YYYY年M月`），跨单元合并
+  - **第二行（16px）**：日期数字 + 星期缩写（与日视图一致格式）
+  - **第三行（20px）工程标尺**：每5天显示刻度数字，11px 蓝色字体（`text-blue-500`）
+- **信息栏标题栏对齐时间轴高度**
+  - CSS 变量 `--gantt-table-header-height` 从 30px → **50px**
+  - 两行结构：第一行（30px）显示列标题（编号/工作名称/持续时间/开始时间/结束时间），第二行（20px）显示「工程标尺」标签
+- **自定义视图周末高亮修复**
+  - 原逻辑：遍历单元日期范围检查是否含周末 → 导致非周末列也被高亮
+  - 修复后：仅根据单元末尾日期是否为周六/日判断高亮（与表头一致）
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `src/types/index.ts` | `TimeScale` 缩减为 day/custom；移除 week/month SCALE_CONFIG |
+| `src/components/TimeScaleHeader/index.tsx` | 重写三行表头；CustomViewHeader 单元模式+末尾日期显示；工程标尺行 h-[20px]、字体 11px |
+| `src/components/GanttTimeline/index.tsx` | 自定义视图单元模式渲染；周末高亮统一基于 endDate 判断 |
+| `src/components/TaskTable/index.tsx` | 标题栏两行结构(30+20=50px)；移除 month 死代码 |
+| `src/components/TaskRow/index.tsx` | 移除 5 处 scale === 'month' 死代码 |
+| `src/components/TaskBar/index.tsx` | 移除 scale === 'month' 死代码 |
+| `src/components/HelpModal/index.tsx` | 视图切换描述更新为日视图/自定义视图 |
+| `src/App.tsx` | customDays 默认值从 15 改为 2 |
+| `src/hooks/useGanttExport.ts` | TIME_HEADER_H 更新为 50（匹配三行表头） |
+| `src/index.css` | --gantt-table-header-height: 30→50 |
+| `README.md` | 功能特性、使用说明、版本历史同步更新 |
+| `package.json` | 版本号 1.0.7→1.0.8 |
+
+---
 
 ### 新功能
 
@@ -210,9 +249,10 @@
 | 1.0.3 | 2026-04-08 | Patch | 修复 EXE 空白/锁定/签名；新增强大示例数据 |
 | 1.0.4 | 2026-04-09 | Patch | 修复进程残留 bug；清理无用文件 |
 | 1.0.5 | 2026-04-09 | Minor | 新增内置 Nginx Web 服务（一键启动/停止） |
+| 1.0.8 | 2026-04-10 | Major | **重构视图系统**：移除周/月视图；时间轴三行表头(年月/日期+星期/工程标尺50px)；自定义视图单元模式(默认2天/格)；信息栏标题栏对齐；周末高亮逻辑统一 |
 | 1.0.7 | 2026-04-09 | Major | 模板系统(3套预设)；UI全面重构(蓝紫标题栏/纯黑边框/列宽优化) |
 | 1.0.6 | 2026-04-09 | Patch | 修复导出图片错乱+任务数不一致；修复 HelpModal 崩溃 |
 
 ---
 
-*文档最后更新：2026-04-09*
+*文档最后更新：2026-04-10*

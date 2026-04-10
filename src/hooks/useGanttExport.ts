@@ -78,7 +78,7 @@ export function useGanttExport() {
 
     // ── 5. 计算容器尺寸（基于任务数 + 时间轴宽度）──
     const ROW_H = 30
-    const TIME_HEADER_H = 46
+    const TIME_HEADER_H = 50
     const safeCount = Math.max(taskCount, 1)
     const totalH = headerHeight + TIME_HEADER_H + (safeCount * ROW_H) + 20
     const totalW = Math.max(actualWidth + 540 + 80, element.scrollWidth + 100)

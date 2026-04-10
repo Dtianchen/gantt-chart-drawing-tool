@@ -46,13 +46,20 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
 
   return (
     <div className="border-r border-slate-200 bg-white flex flex-col overflow-hidden">
-      {/* 表头 */}
-      <div className={`flex items-center gantt-table-header font-semibold text-black uppercase shrink-0 ${scale === 'month' ? 'text-[10px]' : 'text-xs'}`}>
-        <div className="w-10 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">编号</div>
-        <div className="flex-1 px-2 flex items-center justify-center min-w-0 border-r border-black h-full task-cell">工作名称</div>
-        <div className="w-20 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">持续时间</div>
-        <div className="w-20 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">开始时间</div>
-        <div className="w-20 flex items-center justify-center shrink-0 border-r border-black h-full task-cell">结束时间</div>
+      {/* 表头（两行：列标题 / 工程标尺，总高50px与时间轴对齐） */}
+      <div className={`gantt-table-header font-semibold text-slate-700 uppercase shrink-0 flex flex-col text-xs`}>
+        {/* 第一行：合并原第一、二行（30px = 14+16），显示列标题 */}
+        <div className="flex items-center h-[30px] border-b border-slate-200">
+          <div className="w-10 flex items-center justify-center shrink-0 border-r border-slate-200 h-full">编号</div>
+          <div className="flex-1 px-2 flex items-center justify-center min-w-0 border-r border-slate-200 h-full">工作名称</div>
+          <div className="w-20 flex items-center justify-center shrink-0 border-r border-slate-200 h-full">持续时间</div>
+          <div className="w-20 flex items-center justify-center shrink-0 border-r border-slate-200 h-full">开始时间</div>
+          <div className="w-20 flex items-center justify-center shrink-0 h-full">结束时间</div>
+        </div>
+        {/* 第三行（20px）：工程标尺 */}
+        <div className="flex items-center h-[20px]">
+          <span className="w-full text-center text-[11px] font-semibold text-blue-500">工程标尺</span>
+        </div>
       </div>
 
       {/* 表体 */}
@@ -64,7 +71,7 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
                 <TaskRow key={task.id} task={task} index={index} scale={scale} onEdit={onEditTask} />
               ))
             ) : (
-              <div className={`flex items-center justify-center h-full text-slate-400 ${scale === 'month' ? 'text-xs' : 'text-sm'}`}>
+              <div className={`flex items-center justify-center h-full text-slate-400 text-sm`}>
                 暂无任务，点击上方"添加任务"按钮开始或选择模板填充数据
               </div>
             )}

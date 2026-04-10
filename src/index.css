@@ -64,7 +64,7 @@ body {
 :root {
   --gantt-row-height: 30px;
   --gantt-bar-height: 20px;
-  --gantt-table-header-height: 30px;
+  --gantt-table-header-height: 50px;
 }
 
 /* 任务名称自动换行（超过8个汉字时换行） */

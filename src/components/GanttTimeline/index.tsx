@@ -1,13 +1,14 @@
-import React, { useMemo, useRef, useEffect } from 'react'
+import React, { useMemo, useRef } from 'react'
 import TimeScaleHeader from '../TimeScaleHeader'
 import TaskBar from '../TaskBar'
-import { Task, TimeScale } from '../../types'
-import { generateDateRange, isToday } from '../../utils/dateUtils'
+import { Task, TimeScale, UNIT_WIDTH } from '../../types'
+import { generateDateRange, generateDateUnits, isToday } from '../../utils/dateUtils'
 import dayjs from 'dayjs'
 
 interface GanttTimelineProps {
   tasks: Task[]
   scale: TimeScale
+  customDays?: number
   dayWidth: number
   showTodayLine: boolean
   onUpdateTask: (id: string, data: Partial<Task>) => void
@@ -18,6 +19,7 @@ interface GanttTimelineProps {
 export default function GanttTimeline({
   tasks,
   scale,
+  customDays = 2,
   dayWidth,
   showTodayLine,
   onUpdateTask,
@@ -25,43 +27,52 @@ export default function GanttTimeline({
   onEditTask,
 }: GanttTimelineProps) {
   const timelineRef = useRef<HTMLDivElement>(null)
+  const isDayView = scale === 'day'
 
-  const { startDate, endDate, totalDays } = useMemo(() => {
+  // 自定义视图每格天数
+  const activeDaysPerUnit = scale === 'custom' ? customDays : 1
+
+  // 基础日期范围（始终基于日精度计算）
+  const baseRange = useMemo(() => {
     if (tasks.length === 0) {
-      return { startDate: '2026-04-01', endDate: '2026-05-30', totalDays: 60 }
+      return { startDate: '2026-04-01', endDate: '2026-05-30' }
     }
-
-    // 用 dayjs 解析避免时区问题，找到最早开始和最晚结束
     const sortedByStart = [...tasks].sort((a, b) =>
       dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf()
     )
     const sortedByEnd = [...tasks].sort((a, b) =>
       dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf()
     )
-    const minStart = sortedByStart[0].startDate
-    const maxEnd = sortedByEnd[0].endDate
-
-    // 前后各加留白（开始前1天，结束后3天）
-    const s = dayjs(minStart).subtract(1, 'day').format('YYYY-MM-DD')
-    const e = dayjs(maxEnd).add(3, 'day').format('YYYY-MM-DD')
-
-    const allDates = generateDateRange(s, e)
-    return { startDate: s, endDate: e, totalDays: allDates.length }
+    return {
+      startDate: dayjs(sortedByStart[0].startDate).subtract(1, 'day').format('YYYY-MM-DD'),
+      endDate: dayjs(sortedByEnd[0].endDate).add(3, 'day').format('YYYY-MM-DD'),
+    }
   }, [tasks])
 
-  const todayPosition = useMemo(() => {
-    const dates = generateDateRange(startDate, endDate)
-    const idx = dates.findIndex(d => isToday(d))
-    return idx >= 0 ? idx * dayWidth : null
-  }, [startDate, endDate, dayWidth])
+  // 逐日日期数组（用于日视图和今日线定位）
+  const allDates = useMemo(() => generateDateRange(baseRange.startDate, baseRange.endDate), [baseRange])
+  // 单元数组（用于自定义视图）
+  const units = useMemo(
+    () => generateDateUnits(baseRange.startDate, baseRange.endDate, activeDaysPerUnit),
+    [baseRange, activeDaysPerUnit]
+  )
 
-  const totalWidth = totalDays * dayWidth
+  // 总宽度：日视图逐日，自定义视图按单元(28px/格)
+  const totalDays = allDates.length
+  const totalWidth = isDayView ? totalDays * dayWidth : units.length * UNIT_WIDTH
+
+  // 今日线位置（始终基于日精度）
+  const todayPosition = useMemo(() => {
+    const idx = allDates.findIndex(d => isToday(d))
+    if (idx < 0) return null
+    return isDayView ? idx * dayWidth : Math.floor(idx / activeDaysPerUnit) * UNIT_WIDTH + (idx % activeDaysPerUnit) * (UNIT_WIDTH / activeDaysPerUnit)
+  }, [allDates, dayWidth, isDayView, activeDaysPerUnit])
 
   return (
     <div ref={timelineRef} className="h-full overflow-auto gantt-scroll relative">
       <div className="inline-block min-w-full gantt-timeline-content" style={{ width: totalWidth }}>
         {/* 时间刻度头 */}
-        <TimeScaleHeader startDate={startDate} endDate={endDate} scale={scale} dayWidth={dayWidth} />
+        <TimeScaleHeader startDate={baseRange.startDate} endDate={baseRange.endDate} scale={scale} dayWidth={dayWidth} customDays={customDays} />
 
         {/* 任务条区域 */}
         <div className="relative">
@@ -71,7 +82,7 @@ export default function GanttTimeline({
               className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-20 pointer-events-none"
               style={{ left: todayPosition }}
             >
-              <div className={`absolute -top-1 -translate-x-1/2 bg-red-500 text-white px-1 py-0.5 rounded whitespace-nowrap ${scale === 'month' ? 'text-[8px]' : 'text-[9px]'}`}>
+              <div className={`absolute -top-1 -translate-x-1/2 bg-red-500 text-white px-1 py-0.5 rounded whitespace-nowrap text-[10px]`}>
                 今日
               </div>
             </div>
@@ -79,12 +90,39 @@ export default function GanttTimeline({
 
           {/* 网格线 */}
           <div className="absolute inset-0 top-0 pointer-events-none">
-            {/* 垂直线（日期网格线） */}
-            {[...Array(totalDays)].map((_, i) => (
-              <div key={i} className="absolute top-0 bottom-0 border-r border-slate-200" style={{ left: i * dayWidth }} />
-            ))}
-            
-            {/* 水平线（任务行分隔线） */}
+            {isDayView ? (
+              <>
+                {/* 日视图：逐日垂直线 */}
+                {[...Array(totalDays)].map((_, i) => (
+                  <div key={i} className="absolute top-0 bottom-0 border-r border-slate-200" style={{ left: i * dayWidth }} />
+                ))}
+                {/* 周末背景色 */}
+                {allDates.map((date, i) => {
+                  const d = new Date(date)
+                  const isWeekend = d.getDay() === 0 || d.getDay() === 6
+                  return isWeekend ? (
+                    <div key={`bg-${i}`} className="absolute top-0 bottom-0 bg-red-50/30" style={{ left: i * dayWidth, width: dayWidth }} />
+                  ) : null
+                })}
+              </>
+            ) : (
+              /* 自定义视图：按单元垂直线 + 周末背景色 */
+              <>
+                {units.map((_, i) => (
+                  <div key={`line-${i}`} className="absolute top-0 bottom-0 border-r border-slate-200" style={{ left: i * UNIT_WIDTH }} />
+                ))}
+                {units.map((unit, i) => {
+                  // 与表头一致：仅根据末尾日期是否为周末来决定高亮
+                  const endDay = dayjs(unit.endDate)
+                  const isWeekend = endDay.day() === 0 || endDay.day() === 6
+                  return isWeekend ? (
+                    <div key={`bg-${i}`} className="absolute top-0 bottom-0 bg-red-50/30" style={{ left: i * UNIT_WIDTH, width: UNIT_WIDTH, zIndex: 0 }} />
+                  ) : null
+                })}
+              </>
+            )}
+
+            {/* 水平分隔线（任务行） */}
             {[...Array(tasks.length + 1)].map((_, i) => (
               <div
                 key={`h-${i}`}
@@ -97,15 +135,6 @@ export default function GanttTimeline({
                 }}
               />
             ))}
-            
-            {/* 周末背景色 */}
-            {generateDateRange(startDate, endDate).map((date, i) => {
-              const d = new Date(date)
-              const isWeekend = d.getDay() === 0 || d.getDay() === 6
-              return isWeekend ? (
-                <div key={`bg-${i}`} className="absolute top-0 bottom-0 bg-red-50/30" style={{ left: i * dayWidth, width: dayWidth }} />
-              ) : null
-            })}
           </div>
 
           {/* 任务条列表 */}
@@ -114,8 +143,8 @@ export default function GanttTimeline({
               <div key={task.id} className="gantt-timeline-task relative">
                 <TaskBar
                   task={task}
-                  startDate={startDate}
-                  endDate={endDate}
+                  startDate={baseRange.startDate}
+                  endDate={baseRange.endDate}
                   dayWidth={dayWidth}
                   scale={scale}
                   onResize={onResizeTask}

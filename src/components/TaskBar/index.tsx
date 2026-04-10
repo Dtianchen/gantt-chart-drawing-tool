@@ -118,7 +118,7 @@ export default function TaskBar({ task, startDate, endDate, dayWidth, scale, onR
         <div className="h-full flex items-center justify-center px-2 overflow-visible whitespace-nowrap select-none min-w-0">
           <div className="relative w-full h-full flex items-center justify-center pointer-events-none min-w-0">
             <span 
-              className={`text-black font-medium ${scale === 'month' ? 'text-[10px]' : 'text-xs'} whitespace-nowrap flex-shrink-0`}
+              className={`text-black font-medium text-xs whitespace-nowrap flex-shrink-0`}
               style={{ 
                 maxWidth: 'none',
                 lineHeight: '1.2'

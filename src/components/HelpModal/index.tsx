@@ -55,7 +55,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 { icon: GripVertical, color: 'text-green-600', bg: 'bg-green-50', title: '拖拽排序', desc: '按住左侧任务行的拖拽图标（⋮⋮）上下移动，调整任务显示顺序' },
                 { icon: Move, color: 'text-violet-600', bg: 'bg-violet-50', title: '整体移动', desc: '按住任务条中间区域左右拖动，可整体平移任务起止时间，持续时间保持不变' },
                 { icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-50', title: '今日标记线', desc: '红色竖线标注当天位置，方便对照当前日期与各任务的时间关系，可显示/隐藏' },
-                { icon: ZoomIn, color: 'text-purple-600', bg: 'bg-purple-50', title: '视图切换', desc: '周视图每天一格（详细），月视图每周一格（紧凑总览），一键切换' },
+                { icon: ZoomIn, color: 'text-purple-600', bg: 'bg-purple-50', title: '视图切换', desc: '日视图逐天显示（详细），自定义视图可设置每格代表天数（默认2天，每格28px宽），一键切换' },
                 { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导出图片', desc: '一键导出包含项目名称、起止时间、计划工期及完整甘特图的高清 PNG 图片' },
               ].map((item) => (
                 <li key={item.title} className="flex items-start gap-2.5">

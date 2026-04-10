@@ -10,14 +10,12 @@ import HelpModal from './components/HelpModal'
 import { useTaskManager } from './hooks/useTaskManager'
 import { addDays } from './utils/dateUtils'
 import dayjs from 'dayjs'
-import { Task, TimeScale } from './types'
-
-const DAY_WIDTH_WEEK = 28
-const DAY_WIDTH_MONTH = 12
+import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH } from './types'
 
 export default function App() {
   const exportRef = useRef<HTMLDivElement | null>(null)
-  const [scale, setScale] = useState<TimeScale>('week')
+  const [scale, setScale] = useState<TimeScale>('day')
+  const [customDays, setCustomDays] = useState<number>(2) // 自定义视图：每格代表的天数，默认2天
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [addingTask, setAddingTask] = useState<boolean>(false)
   const [showTodayLine, setShowTodayLine] = useState<boolean>(true)
@@ -35,7 +33,9 @@ export default function App() {
     loadTemplate,
   } = useTaskManager()
 
-  const dayWidth = scale === 'week' ? DAY_WIDTH_WEEK : DAY_WIDTH_MONTH
+  const scaleConfig = SCALE_CONFIG[scale]
+  const activeDaysPerUnit = scale === 'custom' ? customDays : scaleConfig.daysPerUnit
+  const effectiveDayWidth = UNIT_WIDTH / activeDaysPerUnit
   const totalDays = tasks.length > 0 ? getTotalDuration(tasks) : 0
 
   // 计算新任务默认开始时间：上一个任务的结束时间 + 1天
@@ -75,8 +75,8 @@ export default function App() {
     return dayjs(maxEnd).diff(dayjs(minStart), 'day') + 1
   }
 
-  const toggleScale = useCallback(() => {
-    setScale(prev => (prev === 'week' ? 'month' : 'week'))
+  const handleScaleChange = useCallback((newScale: TimeScale) => {
+    setScale(newScale)
   }, [])
 
   const toggleTodayLine = useCallback(() => {
@@ -126,7 +126,9 @@ export default function App() {
         toolbar={
           <Toolbar
             onAddTask={handleAddTaskClick}
-            onToggleScale={toggleScale}
+            onScaleChange={handleScaleChange}
+            onCustomDaysChange={setCustomDays}
+            customDays={customDays}
             onToggleTodayLine={toggleTodayLine}
             onShowHelp={handleShowHelp}
             onLoadTemplate={loadTemplate}
@@ -154,7 +156,8 @@ export default function App() {
         <GanttTimeline
           tasks={tasks}
           scale={scale}
-          dayWidth={dayWidth}
+          customDays={customDays}
+          dayWidth={effectiveDayWidth}
           showTodayLine={showTodayLine}
           onUpdateTask={updateTask}
           onResizeTask={resizeTask}
