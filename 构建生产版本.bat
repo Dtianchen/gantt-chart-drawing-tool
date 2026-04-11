@@ -9,7 +9,7 @@ echo   Gantt Tool - Build Production
 echo ==========================================
 echo.
 
-::: Check dependencies
+:: Check dependencies
 if not exist "node_modules" (
     echo [INFO] Installing dependencies...
     call npm install
@@ -26,16 +26,21 @@ echo.
 
 call npm run build
 
-if %errorlevel% equ 0 (
-    echo.
-    echo ==========================================
-    echo   Build SUCCESS!
-    echo   Output: dist\
-    echo   Ready for static server deployment
-    echo ==========================================
-:) else (
-    echo.
-    echo [ERROR] Build failed, check errors above
-)
+:: Use goto pattern for reliable flow control
+if %errorlevel% neq 0 goto :build_fail
+
+echo.
+echo ==========================================
+echo   Build SUCCESS!
+echo   Output: dist\
+echo   Ready for static server deployment
+echo ==========================================
+goto :end
+
+:build_fail
+echo.
+echo [ERROR] Build failed, check errors above
+
+:end
 echo.
 pause
