@@ -133,7 +133,7 @@ export default function Toolbar({
 
               {(Object.keys(SCALE_CONFIG) as TimeScale[]).filter(k => k !== 'custom').map(key => {
                 const cfg = SCALE_CONFIG[key]
-                const isActive = key === scale && scale !== 'custom'
+                const isActive = key === scale
                 return (
                   <button
                     key={key}
