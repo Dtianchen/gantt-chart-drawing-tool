@@ -38,7 +38,6 @@
 | **周末高亮** | 基于单元末尾日期判断周六/日，表头和网格区同步高亮至任务底部 |
 | **工期统计** | 自动计算并显示项目总工期天数 |
 | **今日线** | 在时间轴上标记当前日期位置 |
-| **周末高亮** | 自动标识周六/周日，方便识别工作日 |
 | **导出图片** | 将甘特图导出为 PNG 图片保存/分享 |
 | **数据持久化** | 使用 localStorage 自动保存，刷新不丢失 |
 | **桌面应用** | Electron 打包为 Windows EXE，关闭窗口即完全退出 |
@@ -46,12 +45,6 @@
 | **帮助面板** | 内置使用指南与键盘快捷键说明 |
 
 ---
-
-## 项目截图
-
-
-
-![项目截图](./screenshots/screenshot1.png)
 
 ## 快速开始
 
@@ -208,44 +201,55 @@ npm run electron:build
 ```
 进度工具/
 ├── src/                          # 源代码（21个文件）
-│   ├── components/               # React 组件（12个）
+│   ├── components/               # React 组件（11个）
 │   │   ├── GanttChart/           # 甘特图主容器
 │   │   ├── GanttTimeline/        # 时间轴 + 任务条区域
 │   │   ├── TaskTable/            # 左侧任务列表表格
 │   │   ├── TaskRow/              # 单行任务组件
 │   │   ├── TaskBar/              # 任务进度条（可拖拽调整）
-│   │   ├── TimeScaleHeader/      # 时间刻度表头
+│   │   ├── TimeScaleHeader/      # 时间刻度表头（三行结构：年月/日期+星期/工程标尺）
 │   │   ├── ProjectHeader/        # 项目头部信息
 │   │   ├── Toolbar/              # 工具栏（添加/导出/缩放/今日线/模板）
 │   │   ├── TaskAddModal/         # 添加任务弹窗
 │   │   ├── TaskEditModal/        # 编辑任务弹窗
 │   │   └── HelpModal/            # 帮助面板（快捷键、使用说明）
 │   ├── hooks/                    # 自定义 Hooks（3个）
+│   │   ├── useTaskManager.ts     # 任务管理（CRUD/模板加载/localStorage）
+│   │   ├── useGanttExport.ts     # 甘特图导出为PNG图片
+│   │   └── useLocalStorage.ts    # localStorage 封装
 │   ├── data/                     # 数据层
-│   │   ├── mockData.ts           # 初始模拟数据（180天软件项目）
+│   │   ├── mockData.ts           # 初始模拟数据（180天软件项目，localStorage默认值）
 │   │   └── templates.ts          # 预设项目模板（空白/系统集成/软件开发）
+│   ├── types/                    # TypeScript 类型定义
+│   │   └── index.ts              # Task/Project/TimeScale 类型 + SCALE_CONFIG/TASK_COLORS 常量
+│   ├── utils/                    # 工具函数库
+│   │   └── dateUtils.ts          # 日期计算、格式化、时间单元生成等
 │   ├── App.tsx                   # 主应用组件
 │   ├── main.tsx                  # React 入口
-│   └── index.css                 # 全局样式
+│   └── index.css                 # 全局样式（TailwindCSS + CSS 变量）
 ├── electron/                     # Electron 配置
 │   ├── main.cjs                  # 主进程（CommonJS，关闭窗口自动退出）
 │   └── preload.cjs               # 安全预加载脚本
-├── build/
+├── build/                        # 构建资源
 │   ├── icon.ico                  # Windows 应用图标（256x256 蓝色）
 │   └── icon.png                  # 图标源文件
 ├── nginx/                         # 内置便携版 Nginx（4.5MB）
 │   ├── nginx.exe                 # Nginx 可执行文件
 │   └── conf/nginx.conf           # 预配置（端口 8080 → dist/）
-├── public/favicon.svg            # 网页图标
-├── index.html                    # HTML 入口
-├── package.json                  # 项目配置 & Electron Builder 配置
-├── vite.config.ts                # Vite 配置（base: './' 相对路径）
-├── tailwind.config.js            # TailwindCSS 配置
-├── tsconfig.json                 # TypeScript 编译配置
-├── postcss.config.js             # PostCSS 配置
-├── .gitignore                    # Git 忽略规则
-├── CHANGELOG.md                  # 版本更新日志
-├── README.md                     # 本文件
+├── output/                       # Electron 打包输出目录（electron-builder）
+├── public/
+│   └── favicon.svg                # 网页图标
+├── screenshot-main.png            # 主界面截图（用于 README 预览）
+├── LICENSE                        # MIT 许可证
+├── index.html                     # HTML 入口
+├── package.json                   # 项目配置 & Electron Builder 配置
+├── vite.config.ts                 # Vite 配置（base: './' 相对路径）
+├── tailwind.config.js             # TailwindCSS 配置
+├── tsconfig.json                  # TypeScript 编译配置
+├── postcss.config.js              # PostCSS 配置
+├── .gitignore                     # Git 忽略规则
+├── CHANGELOG.md                   # 版本更新日志
+├── README.md                      # 本文件
 ├── 启动进度工具.bat               # 开发模式一键启动
 ├── 构建生产版本.bat               # 构建生产版本一键脚本
 ├── 打包EXE.bat                    # Electron EXE 打包（含镜像+自动清进程）
@@ -323,14 +327,14 @@ npm run electron:build
 | 版本 | 日期 | 关键变更 |
 |------|------|---------|
 | **1.0.8** | 2026-04-10 | **重构视图系统**：移除周/月视图，仅保留日视图+自定义视图；时间轴表头改为三行（年月/日期+星期/工程标尺，总高50px）；信息栏标题栏对齐时间轴高度；自定义视图单元模式（每格28px，默认2天/格）；工程标尺字体11px蓝色；周末高亮逻辑统一（基于末尾日期）；清理全部 week/month 死代码 |
-| [1.0.7](./CHANGELOG.md#107--2026-04-09) | 2026-04-09 | 模板系统(3套预设)；UI重构(蓝紫标题栏/纯黑边框/列宽优化) |
-| [1.0.6](./CHANGELOG.md#106--2026-04-09) | 2026-04-09 | 修复导出图片错乱/任务数不一致；修复 HelpModal 崩溃 |
-| [1.0.5](./CHANGELOG.md#105--2026-04-09) | 2026-04-09 | 新增内置 Nginx Web 服务；输出目录改为 dist-exe |
-| [1.0.4](./CHANGELOG.md#104--2026-04-09) | 2026-04-09 | 修复进程残留 bug；清理无用文件释放 ~100MB |
-| [1.0.3](./CHANGELOG.md#103--2026-04-08) | 2026-04-08 | 修复 EXE 空白/锁定/签名；新增180天示例数据 |
-| [1.0.2](./CHANGELOG.md#102--2026-04-08) | 2026-04-08 | 新增 Electron 打包、一键脚本、完整文档 |
-| [1.0.1](./CHANGELOG.md#101--2026-04-08) | 2026-04-08 | 修复 TypeScript 类型错误 |
-| [1.0.0](./CHANGELOG.md#100--2026-04-08) | 2026-04-08 | 首次发布 |
+| [**1.0.7**](./CHANGELOG.md#107--2026-04-09) | 2026-04-09 | 模板系统(3套预设)；UI重构(蓝紫标题栏/纯黑边框/列宽优化) |
+| [**1.0.6**](./CHANGELOG.md#106--2026-04-09) | 2026-04-09 | 修复导出图片错乱/任务数不一致；修复 HelpModal 崩溃 |
+| [**1.0.5**](./CHANGELOG.md#105--2026-04-09) | 2026-04-09 | 新增内置 Nginx Web 服务；输出目录改为 dist-exe |
+| [**1.0.4**](./CHANGELOG.md#104--2026-04-09) | 2026-04-09 | 修复进程残留 bug；清理无用文件释放 ~100MB |
+| [**1.0.3**](./CHANGELOG.md#103--2026-04-08) | 2026-04-08 | 修复 EXE 空白/锁定/签名；新增180天示例数据 |
+| [**1.0.2**](./CHANGELOG.md#102--2026-04-08) | 2026-04-08 | 新增 Electron 打包、一键脚本、完整文档 |
+| [**1.0.1**](./CHANGELOG.md#101--2026-04-08) | 2026-04-08 | 修复 TypeScript 类型错误 |
+| [**1.0.0**](./CHANGELOG.md#100--2026-04-08) | 2026-04-08 | 首次发布 |
 
 ---
 
