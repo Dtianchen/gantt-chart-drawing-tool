@@ -4,7 +4,7 @@ title Gantt Tool - Build EXE
 
 cd /d "%~dp0"
 
-:: Set mirrors for China network
+::: Set mirrors for China network
 set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/
 set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/
 
@@ -14,7 +14,7 @@ echo    (Mirror: npmmirror.com)
 echo ==========================================
 echo.
 
-:: Check node_modules
+::: Check node_modules
 if not exist "node_modules" (
     echo [1/3] Installing dependencies...
     call npm install
@@ -39,15 +39,21 @@ if %errorlevel% neq 0 (
 echo.
 echo [3/3] Packaging EXE file (this may take a few minutes)...
 
-::: Kill any lingering electron processes to avoid file locks
-taskkill /F /IM "进度工具.exe" >nul 2>&1
-taskkill /F /IM electron.exe >nul 2>&1
+:::: Kill any lingering electron processes to avoid file locks
+taskkill /F /IM "Gantt-Tool.exe" >nul 2>&1
+taskkill /F /IM "electron.exe" >nul 2>&1
 timeout /t 1 /nobreak >nul
 
-call npx electron-builder --win --config.win.forceCodeSigning=false --config.win.signAndEditExecutable=false
+::: Build to temp English path (avoids Chinese path issue with electron-builder)
+call npx electron-builder --win --config.directories.output=../gantt-exe --config.win.forceCodeSigning=false --config.win.signAndEditExecutable=false
 
 if %errorlevel% equ 0 (
     echo.
+    
+    ::: Copy result back to dist-exe/
+    if exist "dist-exe" rd /s /q "dist-exe"
+    move "..\gantt-exe" "dist-exe" >nul
+    
     echo ==========================================
     echo   Build Complete!
     echo   Output: dist-exe\
