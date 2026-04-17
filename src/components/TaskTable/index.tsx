@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -22,9 +22,25 @@ interface TaskTableProps {
   onDelete: (id: string) => void
   onReorder: (oldIndex: number, newIndex: number) => void
   onEditTask?: (task: Task) => void
+  onAddSubTask?: (parentTask: Task) => void
+  expandedIds?: Set<string>
+  onToggleExpand?: (taskId: string) => void
+  selectedTaskId?: string | null
+  onSelectTask?: (task: Task) => void
 }
 
-export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTask }: TaskTableProps) {
+export default function TaskTable({
+  tasks,
+  scale,
+  onDelete,
+  onReorder,
+  onEditTask,
+  onAddSubTask,
+  expandedIds: externalExpandedIds,
+  onToggleExpand: externalToggleExpand,
+  selectedTaskId: externalSelectedId,
+  onSelectTask,
+}: TaskTableProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 8 },
@@ -33,6 +49,46 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
       coordinateGetter: sortableKeyboardCoordinates,
     })
   )
+
+  // 内部展开状态（外部未传入时使用内部状态）
+  const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(new Set())
+  const expandedIds = externalExpandedIds ?? internalExpandedIds
+
+  function toggleExpand(taskId: string) {
+    if (externalToggleExpand) {
+      externalToggleExpand(taskId)
+    } else {
+      setInternalExpandedIds(prev => {
+        const next = new Set(prev)
+        if (next.has(taskId)) {
+          next.delete(taskId)
+        } else {
+          next.add(taskId)
+        }
+        return next
+      })
+    }
+  }
+
+  // 收集要显示的任务（顶级 + 展开的子任务）
+  const visibleTasks: { task: Task; depth: number }[] = []
+  const topLevelTasks = tasks.filter(t => !t.parentId)
+
+  for (const task of topLevelTasks) {
+    visibleTasks.push({ task, depth: 0 })
+    if (expandedIds.has(task.id)) {
+      const children = tasks.filter(t => t.parentId === task.id)
+      for (const child of children) {
+        visibleTasks.push({ task: child, depth: 1 })
+        if (expandedIds.has(child.id)) {
+          const grandchildren = tasks.filter(t => t.parentId === child.id)
+          for (const gc of grandchildren) {
+            visibleTasks.push({ task: gc, depth: 2 })
+          }
+        }
+      }
+    }
+  }
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -66,9 +122,22 @@ export default function TaskTable({ tasks, scale, onDelete, onReorder, onEditTas
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <div className="flex-1 overflow-y-auto gantt-scroll">
-            {tasks.length > 0 ? (
-              tasks.map((task, index) => (
-                <TaskRow key={task.id} task={task} index={index} scale={scale} onEdit={onEditTask} />
+            {visibleTasks.length > 0 ? (
+              visibleTasks.map(({ task, depth }) => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  index={tasks.indexOf(task)}
+                  scale={scale}
+                  onEdit={onEditTask}
+                  depth={depth}
+                  isExpanded={expandedIds.has(task.id)}
+                  onToggle={toggleExpand}
+                  isSelected={externalSelectedId === task.id}
+                  onSelect={onSelectTask}
+                  onAddSubTask={onAddSubTask}
+                  allTasks={tasks}
+                />
               ))
             ) : (
               <div className={`flex items-center justify-center h-full text-slate-400 text-sm`}>

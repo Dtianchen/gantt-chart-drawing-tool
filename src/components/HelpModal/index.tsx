@@ -1,4 +1,4 @@
-import { X, Plus, Pencil, GripVertical, Move, Calendar, ZoomIn, Download } from 'lucide-react'
+import { X, Plus, Pencil, GripVertical, Move, Calendar, ZoomIn, Download, ChevronDown, ChevronRight, ListTree } from 'lucide-react'
 
 interface HelpModalProps {
   isOpen: boolean
@@ -50,13 +50,14 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
             </h3>
             <ul className="space-y-2.5 pl-3.5">
               {[
-                { icon: Plus, color: 'text-blue-600', bg: 'bg-blue-50', title: '添加任务', desc: '点击「添加任务」按钮，填写名称、开始时间、持续时间等信息。新任务默认开始时间为上一任务的结束日期+1天' },
-                { icon: Pencil, color: 'text-amber-600', bg: 'bg-amber-50', title: '编辑 / 删除', desc: '点击甘特图中的任务条打开编辑弹窗，可修改所有属性或在弹窗内删除任务' },
+                { icon: Plus, color: 'text-blue-600', bg: 'bg-blue-50', title: '添加任务', desc: '点击工具栏「添加任务」→「添加任务」创建顶级任务，或选中一个任务后点击「添加子任务」为其添加子任务' },
+                { icon: ListTree, color: 'text-violet-600', bg: 'bg-violet-50', title: '子任务层级', desc: '支持父子任务嵌套，父任务自动计算起止时间（最早子任务开始 → 最晚子任务结束）；父任务名称加粗显示；点击展开/收起图标查看子任务' },
+                { icon: Pencil, color: 'text-amber-600', bg: 'bg-amber-50', title: '编辑 / 删除', desc: '双击任务行打开编辑弹窗。子任务可自由修改日期，父任务日期由系统根据所有子任务自动计算（显示"自动"标识）' },
                 { icon: GripVertical, color: 'text-green-600', bg: 'bg-green-50', title: '拖拽排序', desc: '按住左侧任务行的拖拽图标（⋮⋮）上下移动，调整任务显示顺序' },
                 { icon: Move, color: 'text-violet-600', bg: 'bg-violet-50', title: '整体移动', desc: '按住任务条中间区域左右拖动，可整体平移任务起止时间，持续时间保持不变' },
                 { icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-50', title: '今日标记线', desc: '红色竖线标注当天位置，方便对照当前日期与各任务的时间关系，可显示/隐藏' },
                 { icon: ZoomIn, color: 'text-purple-600', bg: 'bg-purple-50', title: '视图切换', desc: '日视图逐天显示（详细），自定义视图可设置每格代表天数（默认2天，每格28px宽），一键切换' },
-                { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导出图片', desc: '一键导出包含项目名称、起止时间、计划工期及完整甘特图的高清 PNG 图片' },
+                { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导出图片/Excel', desc: '一键导出包含项目信息的 PNG 图片或 XLSX 表格' },
               ].map((item) => (
                 <li key={item.title} className="flex items-start gap-2.5">
                   <span className={`${item.bg} ${item.color} p-1 rounded-md shrink-0 mt-0.5`}>
@@ -102,11 +103,13 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
             <div className="pl-3.5 space-y-2">
               {[
                 { step: '1', text: '修改项目名称：在信息栏中点击铅笔图标旁的文本框输入名称' },
-                { step: '2', text: '添加第一个任务：点击「添加任务」，系统自动填入默认日期，确认即可' },
+                { step: '2', text: '添加第一个任务：点击工具栏「添加任务」→「添加任务」，系统自动填入默认日期，确认即可' },
                 { step: '3', text: '继续添加任务：新任务的默认开始时间会自动取为上一任务的结束日期+1天' },
-                { step: '4', text: '调整任务顺序：按住左侧拖拽图标上下移动排列顺序' },
-                { step: '5', text: '微调时间安排：通过任务条的边缘拖拽或整体拖拽调整日期' },
-                { step: '6', text: '导出打印：点击「导出图片」生成包含完整信息的 PNG 文件' },
+                { step: '4', text: '添加子任务：选中一个父任务后，点击「添加任务」→「添加子任务」，或 hover 任务行右侧点击 + 按钮' },
+                { step: '5', text: '展开/收起：点击父任务前的 ▸/▾ 图标查看或隐藏子任务，父任务时间由子任务自动计算' },
+                { step: '6', text: '调整任务顺序：按住左侧拖拽图标上下移动排列顺序（仅限同级任务）' },
+                { step: '7', text: '微调时间安排：通过任务条的边缘拖拽或整体拖拽调整日期' },
+                { step: '8', text: '导出打印：点击「导出」按钮选择导出图片（PNG）或表格（XLSX）' },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
@@ -122,7 +125,8 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
           <section className="bg-slate-50 rounded-lg p-3.5 border border-slate-100">
             <p className="text-xs text-slate-500 leading-relaxed">
               <strong className="text-slate-600">提示：</strong>
-              周末日期以浅红色背景标识；所有数据自动保存在浏览器本地存储中，关闭页面后再次打开不会丢失；
+              周末日期以浅红色背景标识；父任务名称加粗显示；父任务日期由所有子任务自动计算（不可手动编辑）；
+              删除父任务时会级联删除所有子任务；所有数据自动保存在浏览器本地存储中，刷新不丢失；
               导出的 PNG 图片包含 2 倍像素密度，适合打印和分享。
             </p>
           </section>

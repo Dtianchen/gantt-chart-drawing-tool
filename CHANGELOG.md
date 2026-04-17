@@ -4,6 +4,62 @@
 
 ---
 
+## [1.0.9] - 2026-04-17
+
+### 新功能
+
+- **子任务层级系统**（核心功能）
+  - `Task` 类型新增 `parentId` 字段，支持父子嵌套关系
+  - **层级编号**：父任务为 `1`，子任务为 `1.1`、`1.2`，孙任务为 `1.1.1`（沿 parentId 链向上追溯拼接）
+  - **展开 / 收起**：父任务行显示 ▸/▾ 图标，点击展开或收起子任务（支持多层嵌套）
+  - **父任务自动日期计算**：
+    - 父任务的 startDate = 所有子任务中最早的 startDate
+    - 父任务的 endDate = 所有子任务中最晚的 endDate
+    - 每次添加/编辑/删除子任务后自动触发重算（`calcParentDates`）
+  - **级联删除**：删除父任务时同时删除所有子孙任务（`taskAllChildren`）
+  - **父任务加粗显示**：存在子任务时，任务名称使用 `font-bold` 加粗
+- **添加子任务交互**
+  - 工具栏「添加任务」改为下拉菜单，包含两个选项：
+    - 「添加任务」— 创建顶级任务
+    - 「添加子任务」— 为选中的任务添加子任务（未选中时置灰）
+  - TaskRow hover 时右侧显示绿色 + 按钮，快速添加子任务
+  - TaskEditModal 中父任务的起止时间禁用并标注「（自动）」，子任务可自由编辑
+- **默认开始时间优化**
+  - 第一个子任务 → 默认 = 父任务的 startDate
+  - 后续子任务 → 默认 = 上一个兄弟子任务 endDate + 1 天
+- **甘特图可见性同步**
+  - GanttTimeline 与 TaskTable 共享 `expandedIds` 状态，只渲染已展开的可见任务条
+  - 确保甘特图行与表格行一一对应，子任务条位置正确
+  - **Excel 导出增强** (`useGanttExcelExport`) — 序号列改用 `calcTaskNumber` 层级编号
+
+### UI 调整
+
+- 工具栏按钮统一：
+  - 所有下拉菜单宽度统一为 140px、居中对齐（`left-1/2 -translate-x-1/2`）
+  - 视图切换按钮文字固定显示「切换视图」（不再动态显示当前刻度）
+- 帮助面板全面更新：
+  - 新增「子任务层级」功能说明
+  - 更新「添加任务」「编辑/删除」「导出」描述
+  - 快速上手步骤从 6 步扩展至 8 步（含添加子任务操作）
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `src/types/index.ts` | 新增 `parentId?` 字段；新增 `calcTaskNumber`/`calcParentDates`/`taskHasChildren`/`taskDepth`/`taskAllChildren` 工具函数 |
+| `src/hooks/useTaskManager.ts` | 所有写操作后调用 `calcParentDates()`；`deleteTask` 改为级联删除 |
+| `src/components/TaskAddModal/index.tsx` | 新增 `parentId`/`allTasks` props；子任务默认日期逻辑（父任务开始时间/兄弟+1） |
+| `src/components/TaskEditModal/index.tsx` | 新增 `allTasks` prop；父任务日期 disabled + "（自动）"标识；子任务可编辑 |
+| `src/components/TaskRow/index.tsx` | 新增 depth/isExpanded/onToggle/onSelect/onAddSubTask/allTasks props；展开图标、层级缩进、hover + 按钮、选中高亮、层级编号、父任务加粗 |
+| `src/components/TaskTable/index.tsx` | 内部维护 `flatVisibleTasks` 按 expandedIds 过滤可见任务；管理 selectedTaskId |
+| `src/components/GanttTimeline/index.tsx` | 新增 `expandedIds` prop；与 TaskTable 一致的可见性过滤逻辑 |
+| `src/components/Toolbar/index.tsx` | 添加任务改为下拉菜单（添加任务 + 子任务）；所有下拉菜单统一 140px 居中；视图按钮文字改为"切换视图" |
+| `src/App.tsx` | 新增 addingSubTaskOf/expandedTaskIds/selectedTaskId 状态及回调；状态提升 |
+| `src/hooks/useGanttExcelExport.ts` | Excel 导出升级：层级编号 |
+| `src/components/HelpModal/index.tsx` | 全面更新帮助内容（子任务说明、8 步快速上手） |
+
+---
+
 ## [1.0.8] - 2026-04-10
 
 ### 重构：视图系统
@@ -245,6 +301,7 @@
 
 | 版本 | 日期 | 类型 | 关键变更 |
 |------|------|------|---------|
+| 1.0.9 | 2026-04-17 | Major | **子任务层级系统**：parentId 嵌套；层级编号(1/1.1)；展开收起；父任务自动日期计算；级联删除；工具栏添加任务下拉菜单 |
 | 1.0.8 | 2026-04-10 | Major | **重构视图系统**：移除周/月视图；时间轴三行表头(年月/日期+星期/工程标尺50px)；自定义视图单元模式(默认2天/格)；信息栏标题栏对齐；周末高亮逻辑统一 |
 | 1.0.7 | 2026-04-09 | Major | 模板系统(3套预设)；UI全面重构(蓝紫标题栏/纯黑边框/列宽优化) |
 | 1.0.6 | 2026-04-09 | Patch | 修复导出图片错乱+任务数不一致；修复 HelpModal 崩溃 |
@@ -257,4 +314,4 @@
 
 ---
 
-*文档最后更新：2026-04-11*
+*文档最后更新：2026-04-17*

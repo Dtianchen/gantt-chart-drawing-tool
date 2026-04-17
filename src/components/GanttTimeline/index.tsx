@@ -11,6 +11,7 @@ interface GanttTimelineProps {
   customDays?: number
   dayWidth: number
   showTodayLine: boolean
+  expandedIds?: Set<string>
   onUpdateTask: (id: string, data: Partial<Task>) => void
   onResizeTask: (id: string, start: string, end: string) => void
   onEditTask: (task: Task) => void
@@ -22,6 +23,7 @@ export default function GanttTimeline({
   customDays = 2,
   dayWidth,
   showTodayLine,
+  expandedIds = new Set(),
   onUpdateTask,
   onResizeTask,
   onEditTask,
@@ -137,22 +139,39 @@ export default function GanttTimeline({
             ))}
           </div>
 
-          {/* 任务条列表 */}
-          <div className="relative">
-            {tasks.map(task => (
-              <div key={task.id} className="gantt-timeline-task relative">
-                <TaskBar
-                  task={task}
-                  startDate={baseRange.startDate}
-                  endDate={baseRange.endDate}
-                  dayWidth={dayWidth}
-                  scale={scale}
-                  onResize={onResizeTask}
-                  onEdit={onEditTask}
-                />
+          {/* 任务条列表（与 TaskTable 保持一致的可见性过滤） */}
+          {(() => {
+            const visibleTasks: Task[] = []
+            for (const task of tasks.filter(t => !t.parentId)) {
+              visibleTasks.push(task)
+              if (expandedIds.has(task.id)) {
+                const children = tasks.filter(t => t.parentId === task.id)
+                for (const child of children) {
+                  visibleTasks.push(child)
+                  if (expandedIds.has(child.id)) {
+                    visibleTasks.push(...tasks.filter(t => t.parentId === child.id))
+                  }
+                }
+              }
+            }
+            return (
+              <div className="relative">
+                {visibleTasks.map(task => (
+                  <div key={task.id} className="gantt-timeline-task relative">
+                    <TaskBar
+                      task={task}
+                      startDate={baseRange.startDate}
+                      endDate={baseRange.endDate}
+                      dayWidth={dayWidth}
+                      scale={scale}
+                      onResize={onResizeTask}
+                      onEdit={onEditTask}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )
+          })()}
         </div>
       </div>
     </div>

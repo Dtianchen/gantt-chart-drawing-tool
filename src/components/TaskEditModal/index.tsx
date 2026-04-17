@@ -9,14 +9,19 @@ interface TaskEditModalProps {
   onClose: () => void
   onSave: (id: string, data: Partial<Task>) => void
   onDelete?: (id: string) => void
+  allTasks?: Task[]
 }
 
-export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete }: TaskEditModalProps) {
+export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete, allTasks = [] }: TaskEditModalProps) {
   const [name, setName] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [duration, setDuration] = useState<number>(1)
   const [color, setColor] = useState<TaskColor>('red')
+  const [taskParentId, setTaskParentId] = useState<string>('')
+
+  const isChildTask = !!task?.parentId
+  const isParentTask = task ? allTasks.some(t => t.parentId === task.id) : false
 
   useEffect(() => {
     if (task) {
@@ -25,6 +30,7 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete 
       setEndDate(task.endDate)
       setDuration(task.duration > 0 ? task.duration : getDaysBetween(task.startDate, task.endDate))
       setColor(task.color)
+      setTaskParentId(task.parentId || '')
     }
   }, [task])
 
@@ -61,7 +67,14 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete 
 
   function handleSave() {
     if (!startDate || !endDate || !task) return
-    onSave(task.id, { name, startDate, endDate, color, duration })
+    onSave(task.id, {
+      name,
+      startDate,
+      endDate,
+      color,
+      duration,
+      ...(taskParentId ? { parentId: taskParentId } : {}),
+    })
     onClose()
   }
 
@@ -105,12 +118,15 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete 
           {/* 开始时间 + 持续时间 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-600">开始时间</label>
+              <label className="text-xs font-medium text-slate-600">
+                开始时间 {isParentTask && <span className="text-emerald-500 text-[10px]">（自动）</span>}
+              </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={handleStartDateChange}
-                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all"
+                disabled={isParentTask}
+                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white disabled:bg-slate-100 disabled:text-slate-400"
               />
             </div>
             <div className="space-y-1.5">
@@ -129,13 +145,16 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete 
           {/* 结束时间（可手动选择或自动计算） */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5 col-span-1">
-              <label className="text-xs font-medium text-slate-600">结束时间</label>
+              <label className="text-xs font-medium text-slate-600">
+                结束时间 {isParentTask && <span className="text-emerald-500 text-[10px]">（自动）</span>}
+              </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={handleEndDateChange}
                 min={startDate || undefined}
-                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all"
+                disabled={isParentTask}
+                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white disabled:bg-slate-100 disabled:text-slate-400"
               />
             </div>
             {startDate && endDate && (
@@ -143,6 +162,23 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete 
                 共 {getDaysBetween(startDate, endDate)} 天
               </div>
             )}
+          </div>
+
+          {/* 父任务选择 */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-600">父任务</label>
+            <select
+              value={taskParentId}
+              onChange={e => setTaskParentId(e.target.value)}
+              className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white"
+            >
+              <option value="">无（顶级任务）</option>
+              {allTasks
+                .filter(t => !t.parentId && t.id !== task?.id)
+                .map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+            </select>
           </div>
 
           {/* 颜色选择 */}

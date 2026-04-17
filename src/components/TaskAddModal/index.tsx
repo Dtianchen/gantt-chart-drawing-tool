@@ -2,25 +2,44 @@ import React, { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { Task, TaskColor, TASK_COLORS, TASK_COLOR_MAP } from '../../types'
 import { addDays, getDaysBetween } from '../../utils/dateUtils'
+import dayjs from 'dayjs'
 
 interface TaskAddModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (taskData: Omit<Task, 'id'>) => void
   defaultStartDate?: string
+  parentId?: string
+  allTasks?: Task[]
 }
 
-export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate }: TaskAddModalProps) {
+export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate, parentId, allTasks = [] }: TaskAddModalProps) {
   const [name, setName] = useState('新任务')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [duration, setDuration] = useState<number>(5)
   const [color, setColor] = useState<TaskColor>('blue')
+  const [taskParentId, setTaskParentId] = useState<string>('')
 
-  // 设置默认日期（优先使用上一个任务结束+1，否则明天开始，持续5天）
+  // 设置默认日期（子任务：上一个子任务结束+1；第一个子任务用父任务开始时间；普通任务：上一个任务结束+1或明天）
   useEffect(() => {
     if (isOpen) {
-      const defaultStart = defaultStartDate || addDays(new Date().toISOString().split('T')[0], 1)
+      let defaultStart: string
+      const parent = allTasks.find(t => t.id === parentId)
+      if (parentId && parent) {
+        // 子任务：查找同父任务的已有子任务，取最晚结束时间+1
+        const siblings = allTasks.filter(t => t.parentId === parentId)
+        if (siblings.length > 0) {
+          const latestEnd = [...siblings].sort((a, b) =>
+            dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf()
+          )[0].endDate
+          defaultStart = addDays(latestEnd, 1)
+        } else {
+          defaultStart = parent.startDate
+        }
+      } else {
+        defaultStart = defaultStartDate || addDays(new Date().toISOString().split('T')[0], 1)
+      }
       const calcEnd = addDays(defaultStart, 4)
 
       setStartDate(defaultStart)
@@ -28,8 +47,9 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
       setDuration(5)
       setName('新任务')
       setColor('blue')
+      setTaskParentId(parentId || '')
     }
-  }, [isOpen, defaultStartDate])
+  }, [isOpen, defaultStartDate, parentId, allTasks])
 
   if (!isOpen) return null
 
@@ -82,6 +102,7 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
       endDate,
       color,
       duration: getDaysBetween(startDate, endDate),
+      ...(taskParentId ? { parentId: taskParentId } : {}),
     })
     onClose()
   }
@@ -174,6 +195,23 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
                 共 {getDaysBetween(startDate, endDate)} 天
               </div>
             )}
+          </div>
+
+          {/* 父任务选择 */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-600">父任务</label>
+            <select
+              value={taskParentId}
+              onChange={e => setTaskParentId(e.target.value)}
+              className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white"
+            >
+              <option value="">无（顶级任务）</option>
+              {allTasks
+                .filter(t => !t.parentId)
+                .map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+            </select>
           </div>
 
           {/* 颜色选择 */}

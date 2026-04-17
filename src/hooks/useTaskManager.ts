@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { Task, TaskColor } from '../types'
+import { Task, TaskColor, calcParentDates, taskAllChildren } from '../types'
 import { useLocalStorage } from './useLocalStorage'
 import { mockProject } from '../data/mockData'
 import { TEMPLATES } from '../data/templates'
@@ -20,17 +20,19 @@ export function useTaskManager() {
         id: generateId(),
         ...taskData,
       }
-      setProject(prev => ({
-        ...prev,
-        tasks: [...prev.tasks, newTask],
-      }))
+      setProject(prev => {
+        const tasksWithNew = [...prev.tasks, newTask]
+        return {
+          ...prev,
+          tasks: calcParentDates(tasksWithNew),
+        }
+      })
     }
   }, [setProject])
 
   const updateTask = useCallback((id: string, data: Partial<Task>) => {
-    setProject(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(task =>
+    setProject(prev => {
+      const tasksAfterUpdate = prev.tasks.map(task =>
         task.id === id
           ? {
               ...task,
@@ -40,15 +42,24 @@ export function useTaskManager() {
                 : task.duration,
             }
           : task
-      ),
-    }))
+      )
+      return {
+        ...prev,
+        tasks: calcParentDates(tasksAfterUpdate),
+      }
+    })
   }, [setProject])
 
   const deleteTask = useCallback((id: string) => {
-    setProject(prev => ({
-      ...prev,
-      tasks: prev.tasks.filter(task => task.id !== id),
-    }))
+    setProject(prev => {
+      // 收集要删除的 ID（包括子孙）
+      const idsToRemove = new Set([id, ...taskAllChildren(id, prev.tasks)])
+      const tasksAfterDelete = prev.tasks.filter(task => !idsToRemove.has(task.id))
+      return {
+        ...prev,
+        tasks: calcParentDates(tasksAfterDelete),
+      }
+    })
   }, [setProject])
 
   const reorderTasks = useCallback((oldIndex: number, newIndex: number) => {
@@ -61,14 +72,17 @@ export function useTaskManager() {
   }, [setProject])
 
   const resizeTask = useCallback((id: string, newStartDate: string, newEndDate: string) => {
-    setProject(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(task =>
+    setProject(prev => {
+      const tasksAfterResize = prev.tasks.map(task =>
         task.id === id
           ? { ...task, startDate: newStartDate, endDate: newEndDate, duration: getDaysBetween(newStartDate, newEndDate) }
           : task
-      ),
-    }))
+      )
+      return {
+        ...prev,
+        tasks: calcParentDates(tasksAfterResize),
+      }
+    })
   }, [setProject])
 
   const updateProjectName = useCallback((name: string) => {

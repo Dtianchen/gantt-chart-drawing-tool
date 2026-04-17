@@ -18,8 +18,11 @@ export default function App() {
   const [customDays, setCustomDays] = useState<number>(2) // 自定义视图：每格代表的天数，默认2天
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [addingTask, setAddingTask] = useState<boolean>(false)
+  const [addingSubTaskOf, setAddingSubTaskOf] = useState<Task | null>(null)
   const [showTodayLine, setShowTodayLine] = useState<boolean>(true)
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false)
+  const [expandedTaskIds, setExpandedTaskIds] = useState<Set<string>>(new Set())
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
 
   const {
     projectName,
@@ -91,13 +94,20 @@ export default function App() {
     setAddingTask(true)
   }, [])
 
+  const handleAddSubTaskClick = useCallback((parentTask: Task) => {
+    setAddingTask(true)
+    setAddingSubTaskOf(parentTask)
+  }, [])
+
   const handleCloseAddTaskModal = useCallback(() => {
     setAddingTask(false)
+    setAddingSubTaskOf(null)
   }, [])
 
   const handleSaveNewTask = useCallback((taskData: Omit<Task, 'id'>) => {
     addTask(taskData)
     setAddingTask(false)
+    setAddingSubTaskOf(null)
   }, [addTask])
 
   const handleEditTask = useCallback((task: Task) => {
@@ -140,6 +150,9 @@ export default function App() {
             projectEndDate={projectDateRange.endDate}
             totalDays={totalDays}
             taskCount={tasks.length}
+            tasks={tasks}
+            selectedTaskId={selectedTaskId}
+            onAddSubTask={handleAddSubTaskClick}
           />
         }
       />
@@ -152,6 +165,18 @@ export default function App() {
           onDelete={deleteTask}
           onReorder={reorderTasks}
           onEditTask={handleEditTask}
+          onAddSubTask={handleAddSubTaskClick}
+          expandedIds={expandedTaskIds}
+          onToggleExpand={id => {
+            setExpandedTaskIds(prev => {
+              const next = new Set(prev)
+              if (next.has(id)) next.delete(id)
+              else next.add(id)
+              return next
+            })
+          }}
+          selectedTaskId={selectedTaskId}
+          onSelectTask={t => setSelectedTaskId(t.id)}
         />
         <GanttTimeline
           tasks={tasks}
@@ -159,6 +184,7 @@ export default function App() {
           customDays={customDays}
           dayWidth={effectiveDayWidth}
           showTodayLine={showTodayLine}
+          expandedIds={expandedTaskIds}
           onUpdateTask={updateTask}
           onResizeTask={resizeTask}
           onEditTask={handleEditTask}
@@ -172,6 +198,7 @@ export default function App() {
         onClose={handleCloseModal}
         onSave={updateTask}
         onDelete={deleteTask}
+        allTasks={tasks}
       />
 
       {/* 添加任务弹窗 */}
@@ -180,6 +207,8 @@ export default function App() {
         onClose={handleCloseAddTaskModal}
         onSave={handleSaveNewTask}
         defaultStartDate={defaultTaskStartDate}
+        allTasks={tasks}
+        parentId={addingSubTaskOf?.id}
       />
 
       {/* 帮助弹窗 */}

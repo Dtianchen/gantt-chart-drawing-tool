@@ -1,8 +1,10 @@
 import { useRef, useCallback, useState } from 'react'
-import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X, ChevronDown } from 'lucide-react'
+import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X, ChevronDown, FileSpreadsheet } from 'lucide-react'
 import { TimeScale, SCALE_CONFIG } from '../../types'
 import { useGanttExport } from '../../hooks/useGanttExport'
+import { useGanttExcelExport } from '../../hooks/useGanttExcelExport'
 import dayjs from 'dayjs'
+import { Task } from '../../types'
 
 interface TemplateOption {
   id: string
@@ -32,6 +34,9 @@ interface ToolbarProps {
   projectEndDate?: string
   totalDays?: number
   taskCount?: number
+  tasks?: Task[]
+  selectedTaskId?: string | null
+  onAddSubTask?: (parentTask: Task) => void
 }
 
 export default function Toolbar({
@@ -50,11 +55,17 @@ export default function Toolbar({
   projectEndDate = '',
   totalDays = 0,
   taskCount = 0,
+  tasks = [],
+  selectedTaskId,
+  onAddSubTask,
 }: ToolbarProps) {
   const { exportGanttAsImage } = useGanttExport()
+  const { exportGanttAsExcel } = useGanttExcelExport()
   const [showTemplates, setShowTemplates] = useState(false)
   const [confirmTemplate, setConfirmTemplate] = useState<TemplateOption | null>(null)
   const [showScaleMenu, setShowScaleMenu] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const [showAddMenu, setShowAddMenu] = useState(false)
   const [customInputValue, setCustomInputValue] = useState(String(customDays))
 
   const handleExport = useCallback(async () => {
@@ -70,6 +81,19 @@ export default function Toolbar({
       }, taskCount)
     }
   }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays])
+
+  const handleExportExcel = useCallback(() => {
+    const timestamp = dayjs().format('YYYYMMDD_HHmmss')
+    const name = projectName.trim() || '项目'
+    const filename = `${name}_${timestamp}_项目计划.xlsx`
+    exportGanttAsExcel(tasks, {
+      projectName,
+      startDate: projectStartDate,
+      endDate: projectEndDate,
+      totalDays,
+    }, filename)
+    setShowExportMenu(false)
+  }, [tasks, exportGanttAsExcel, projectName, projectStartDate, projectEndDate, totalDays])
 
   const handleSelectTemplate = useCallback((templateId: string) => {
     const tpl = TEMPLATE_OPTIONS.find(t => t.id === templateId)
@@ -90,23 +114,102 @@ export default function Toolbar({
 
   const btnBase = "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer active:scale-[0.97]"
 
+  const selectedTask = tasks.find(t => t.id === selectedTaskId)
+
   return (
     <div className="flex items-center gap-2">
-      <button
-        onClick={onAddTask}
-        className={`${btnBase} bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow`}
-      >
+      {/* 添加任务下拉菜单 */}
+      <div className="relative">
+        <button
+          onClick={() => setShowAddMenu(prev => !prev)}
+          className={`${btnBase} bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow`}
+        >
         <Plus size={15} />
         添加任务
-      </button>
+        </button>
 
-      <button
-        onClick={handleExport}
-        className={`${btnBase} bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow`}
-      >
-        <Download size={15} />
-        导出图片
-      </button>
+        {showAddMenu && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setShowAddMenu(false)} />
+
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[140px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              <button
+                onClick={() => { onAddTask(); setShowAddMenu(false) }}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 transition-colors text-left"
+              >
+                <Plus size={16} className="text-blue-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-slate-700">添加任务</p>
+                  <p className="text-[10px] text-slate-400">创建新的父级任务</p>
+                </div>
+              </button>
+
+              {onAddSubTask && (
+                <button
+                  onClick={() => { selectedTask && onAddSubTask(selectedTask); setShowAddMenu(false) }}
+                  disabled={!selectedTask}
+                  className={`w-full flex items-center gap-2 px-3 py-2 transition-colors text-left ${
+                    selectedTask ? 'hover:bg-violet-50' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  <Plus size={16} className="text-violet-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">添加子任务</p>
+                    <p className="text-[10px] text-slate-400">
+                      {selectedTask ? `为「${selectedTask.name}」添加` : '请先选中一个任务'}
+                    </p>
+                  </div>
+                </button>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="relative">
+        <button
+          onClick={() => setShowExportMenu(prev => !prev)}
+          className={`${btnBase} bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow`}
+        >
+          <Download size={15} />
+          导出
+          <ChevronDown size={13} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showExportMenu && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setShowExportMenu(false)} />
+
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[140px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="px-3 pt-2 pb-1.5 border-b border-slate-100">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">导出格式</p>
+              </div>
+
+              <button
+                onClick={() => { handleExport(); setShowExportMenu(false) }}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-emerald-50 transition-colors text-left"
+              >
+                <Download size={16} className="text-emerald-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-slate-700">导出图片</p>
+                  <p className="text-[10px] text-slate-400">PNG 格式，适合分享</p>
+                </div>
+              </button>
+
+              <button
+                onClick={handleExportExcel}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-violet-50 transition-colors text-left"
+              >
+                <FileSpreadsheet size={16} className="text-violet-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-slate-700">导出 Excel</p>
+                  <p className="text-[10px] text-slate-400">XLSX 格式，可编辑</p>
+                </div>
+              </button>
+            </div>
+          </>
+        )}
+      </div>
 
       <div className="w-px h-6 bg-slate-200 mx-1" />
 
@@ -118,7 +221,7 @@ export default function Toolbar({
           title="切换视图"
         >
           {scale === 'day' ? <ZoomIn size={14} /> : <ZoomOut size={14} />}
-          {scale === 'custom' ? `自定义(${customDays}天)` : SCALE_CONFIG[scale].label}
+          切换视图
           <ChevronDown size={13} className={`transition-transform ${showScaleMenu ? 'rotate-180' : ''}`} />
         </button>
 
@@ -241,7 +344,7 @@ export default function Toolbar({
             {/* 点击外部关闭 */}
             <div className="fixed inset-0 z-30" onClick={(e) => { e.preventDefault(); setShowTemplates(false) }} />
             
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[200px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[140px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="px-3 pt-2 pb-1.5 border-b border-slate-100">
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">选择模板</p>
               </div>
@@ -250,7 +353,7 @@ export default function Toolbar({
                 <button
                   key={tpl.id}
                   onClick={() => handleSelectTemplate(tpl.id)}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-violet-50 transition-colors text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-violet-50 transition-colors text-left"
                 >
                   <LayoutTemplate size={15} className="shrink-0 text-violet-400" />
                   <div className="min-w-0">
