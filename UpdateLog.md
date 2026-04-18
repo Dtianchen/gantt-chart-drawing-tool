@@ -1,6 +1,21 @@
-# 更新日志 (CHANGELOG)
+# 更新日志 (UpdateLog)
 
 本文档记录项目的所有重要变更，格式基于 [Keep a Changelog](https://keepachangelog.com/)。
+
+---
+
+## [1.0.10] - 2026-04-18
+
+### 新增
+- **父任务进度条样式区分**：父任务（有子任务的 Task）的进度条样式与普通任务视觉差异化：
+  - 父任务：**斜纹半透明背景**（`repeating-linear-gradient`）+ **2px 加粗边框** + **高度 22px**
+  - 普通任务（无子任务）：**纯色实心背景** + **1px 细边框** + **高度 20px**（保持原样）
+- `TaskBar` 组件新增 `tasks` prop，用于调用 `taskHasChildren()` 判断是否为父任务
+- 更新 `GanttTimeline` 向 `TaskBar` 传递完整任务列表
+
+### 技术细节
+- 修改文件：`src/components/TaskBar/index.tsx`、`src/components/GanttTimeline/index.tsx`
+- 利用已有工具函数 `taskHasChildren(taskId, tasks)` 判断父子关系，无需新增类型
 
 ---
 
@@ -277,7 +292,7 @@
 
 - **Electron 桌面应用打包** — NSIS 安装版 + Portable 便携版
 - **一键脚本** — 启动进度工具.bat / 构建生产版本.bat / 打包EXE.bat
-- **完整项目文档** — README.md / CHANGELOG.md
+- **完整项目文档** — README.md / UpdateLog.md
 
 ---
 

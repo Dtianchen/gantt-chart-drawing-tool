@@ -160,6 +160,7 @@ export default function GanttTimeline({
                   <div key={task.id} className="gantt-timeline-task relative">
                     <TaskBar
                       task={task}
+                      tasks={tasks}
                       startDate={baseRange.startDate}
                       endDate={baseRange.endDate}
                       dayWidth={dayWidth}

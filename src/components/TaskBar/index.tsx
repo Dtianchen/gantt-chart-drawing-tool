@@ -1,9 +1,10 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react'
-import { Task, TASK_COLOR_MAP, TimeScale } from '../../types'
+import { Task, TASK_COLOR_MAP, TimeScale, taskHasChildren } from '../../types'
 import { generateDateRange, addDays } from '../../utils/dateUtils'
 
 interface TaskBarProps {
   task: Task
+  tasks: Task[]
   startDate: string
   endDate: string
   dayWidth: number
@@ -12,7 +13,7 @@ interface TaskBarProps {
   onEdit: (task: Task) => void
 }
 
-export default function TaskBar({ task, startDate, endDate, dayWidth, scale, onResize, onEdit }: TaskBarProps) {
+export default function TaskBar({ task, tasks, startDate, endDate, dayWidth, scale, onResize, onEdit }: TaskBarProps) {
   const [resizing, setResizing] = useState<'left' | 'right' | null>(null)
   const [dragging, setDragging] = useState(false)
   const didDragRef = useRef(false)
@@ -26,6 +27,7 @@ export default function TaskBar({ task, startDate, endDate, dayWidth, scale, onR
   const leftPx = startIndex * dayWidth
   const widthPx = (endIndex - startIndex + 1) * dayWidth
   const color = TASK_COLOR_MAP[task.color] || '#ef4444'
+  const isParent = taskHasChildren(task.id, tasks)
 
   const handleMouseDown = useCallback((side: 'left' | 'right') => (e: React.MouseEvent) => {
     e.preventDefault()
@@ -109,8 +111,12 @@ export default function TaskBar({ task, startDate, endDate, dayWidth, scale, onR
         style={{
           left: leftPx,
           width: Math.max(widthPx, 8),
-          height: 20,
-          backgroundColor: color,
+          height: isParent ? 22 : 20,
+          backgroundColor: isParent ? 'transparent' : color,
+          backgroundImage: isParent
+            ? `repeating-linear-gradient(45deg, ${color}88, ${color}88 4px, ${color}55 4px, ${color}55 8px)`
+            : 'none',
+          border: isParent ? `2px solid ${color}` : `1px solid ${color}88`,
           top: '50%',
           transform: 'translateY(-50%)',
         }}
