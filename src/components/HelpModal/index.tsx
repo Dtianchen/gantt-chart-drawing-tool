@@ -1,4 +1,4 @@
-import { X, Plus, Pencil, GripVertical, Move, Calendar, ZoomIn, Download, ChevronDown, ChevronRight, ListTree } from 'lucide-react'
+import { X, Plus, Pencil, GripVertical, Move, Calendar, ZoomIn, Download, ChevronDown, ChevronRight, ListTree, Undo2, Search } from 'lucide-react'
 
 interface HelpModalProps {
   isOpen: boolean
@@ -52,12 +52,14 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               {[
                 { icon: Plus, color: 'text-blue-600', bg: 'bg-blue-50', title: '添加任务', desc: '点击工具栏「添加任务」→「添加任务」创建顶级任务，或选中一个任务后点击「添加子任务」为其添加子任务' },
                 { icon: ListTree, color: 'text-violet-600', bg: 'bg-violet-50', title: '子任务层级', desc: '支持父子任务嵌套，父任务自动计算起止时间（最早子任务开始 → 最晚子任务结束）；父任务名称加粗显示；点击展开/收起图标查看子任务' },
-                { icon: Pencil, color: 'text-amber-600', bg: 'bg-amber-50', title: '编辑 / 删除', desc: '双击任务行打开编辑弹窗。子任务可自由修改日期，父任务日期由系统根据所有子任务自动计算（显示"自动"标识）' },
+                { icon: Pencil, color: 'text-amber-600', bg: 'bg-amber-50', title: '编辑 / 删除', desc: '双击任务行打开编辑弹窗，可修改任务名称、时间、颜色、完成进度和前置任务。子任务可自由修改日期，父任务日期由系统自动计算' },
                 { icon: GripVertical, color: 'text-green-600', bg: 'bg-green-50', title: '拖拽排序', desc: '按住左侧任务行的拖拽图标（⋮⋮）上下移动，调整任务显示顺序' },
                 { icon: Move, color: 'text-violet-600', bg: 'bg-violet-50', title: '整体移动', desc: '按住任务条中间区域左右拖动，可整体平移任务起止时间，持续时间保持不变' },
                 { icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-50', title: '今日标记线', desc: '红色竖线标注当天位置，方便对照当前日期与各任务的时间关系，可显示/隐藏' },
                 { icon: ZoomIn, color: 'text-purple-600', bg: 'bg-purple-50', title: '视图切换', desc: '日视图逐天显示（详细），自定义视图可设置每格代表天数（默认2天，每格28px宽），一键切换' },
-                { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导出图片/Excel', desc: '一键导出包含项目信息的 PNG 图片或 XLSX 表格' },
+                { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导入 / 导出', desc: '导出 PNG 图片、XLSX 表格或 JSON 数据备份；支持从 JSON 文件恢复完整项目数据（含任务层级、颜色、进度）' },
+                { icon: Undo2, color: 'text-indigo-600', bg: 'bg-indigo-50', title: '撤销 / 重做', desc: '工具栏撤销/重做按钮或使用快捷键 Ctrl+Z / Ctrl+Shift+Z，最多保留 50 步操作历史' },
+                { icon: Search, color: 'text-sky-600', bg: 'bg-sky-50', title: '搜索过滤', desc: '工具栏搜索框输入任务名称实时过滤，自动展开匹配项的父任务路径，左右区域同步显示结果' },
               ].map((item) => (
                 <li key={item.title} className="flex items-start gap-2.5">
                   <span className={`${item.bg} ${item.color} p-1 rounded-md shrink-0 mt-0.5`}>
@@ -127,6 +129,8 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               <strong className="text-slate-600">提示：</strong>
               周末日期以浅红色背景标识；父任务名称加粗显示；父任务日期由所有子任务自动计算（不可手动编辑）；
               删除父任务时会级联删除所有子任务；所有数据自动保存在浏览器本地存储中，刷新不丢失；
+              任务完成进度可在编辑弹窗中调整（0-100%），进度条双层显示（底层计划/上层实际）；
+              导出 JSON 可完整备份项目数据（含任务层级、颜色、进度），换电脑或清浏览器后可导入恢复；
               导出的 PNG 图片包含 2 倍像素密度，适合打印和分享。
             </p>
           </section>

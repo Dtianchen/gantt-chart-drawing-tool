@@ -8,6 +8,8 @@ export interface Task {
   startDate: string
   endDate: string
   color: TaskColor
+  progress?: number   // 任务完成百分比（0-100），默认 100
+  predecessors?: string[]  // 前置任务ID列表（依赖关系）
 }
 
 export interface Project {

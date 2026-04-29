@@ -4,6 +4,59 @@
 
 ---
 
+## [1.0.11] - 2026-04-29
+
+### 新增
+
+- **JSON 导入 / 导出** — 数据备份与恢复
+  - 导出：将完整项目数据（含任务层级、颜色、展开状态、完成进度）导出为 `.json` 文件
+  - 导入：通过「导出」下拉菜单中的「导入 JSON」从备份文件恢复数据，自动校验格式
+  - 解决 localStorage 易丢失、换电脑/清浏览器后数据无法恢复的问题
+- **撤销 / 重做（Undo / Redo）**
+  - 基于历史状态栈实现，最多保留 50 步操作记录
+  - 支持快捷键：`Ctrl+Z` 撤销、`Ctrl+Shift+Z` / `Ctrl+Y` 重做
+  - 工具栏新增撤销/重做按钮，自动根据可用状态启用/禁用
+  - 覆盖所有写操作：增删改任务、调时间、加载模板、JSON 导入
+- **任务完成百分比（Progress）**
+  - `Task` 类型新增可选 `progress` 字段（0-100），默认 100
+  - 甘特图进度条改为**双层渲染**：底层浅色表示计划工期范围，内层实色表示实际完成进度
+  - 编辑弹窗新增「完成进度」滑块（0-100%），实时预览百分比
+  - 任务列表「持续时间」列旁显示进度百分比小标签（仅当 < 100% 时显示）
+- **任务搜索过滤**
+  - 工具栏新增实时搜索框，按任务名称过滤（不区分大小写）
+  - 搜索时自动展开包含匹配项的父任务路径，左右区域同步显示过滤结果
+  - 支持快捷键 `Ctrl+F` 快速聚焦搜索框
+- **全局快捷键系统**
+  - `Ctrl+N`：添加新任务
+  - `Ctrl+Delete`：删除当前选中的任务
+  - `Ctrl+S`：手动保存提示（触发 localStorage 同步并显示 Toast）
+  - `Ctrl+F`：聚焦搜索框
+  - `Ctrl+Z` / `Ctrl+Shift+Z` / `Ctrl+Y`：撤销/重做
+  - 输入框聚焦时自动跳过快捷键拦截，避免误触发
+
+### 重构
+- **提取共用过滤逻辑**：将 `TaskTable` 和 `GanttTimeline` 中重复的三层嵌套可见性过滤逻辑提取为 `src/utils/taskUtils.ts` 中的 `getVisibleTasks(tasks, expandedIds, searchQuery?)`
+  - 返回带 `depth` 和 `index` 的扁平数组，两处共用，消除重复代码
+  - 搜索模式下自动保留匹配项的父任务路径并展开相关节点
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `src/utils/taskUtils.ts` | **新增** — `getVisibleTasks` 共用过滤函数 + `getAncestorIds` 工具函数 |
+| `src/types/index.ts` | `Task` 新增可选 `progress?: number` 字段 |
+| `src/hooks/useTaskManager.ts` | 新增 `history` 历史栈、`undo`/`redo`、`exportProject`/`importProject`；所有写操作自动记录历史；`canUndo`/`canRedo` 响应式状态 |
+| `src/App.tsx` | 新增 `searchQuery`/`filteredTasks` 派生状态、全局 `keydown` 快捷键监听、`saveToast`、搜索自动展开父任务 |
+| `src/components/Toolbar/index.tsx` | 新增搜索框、撤销/重做按钮、JSON 导入/导出入口、`FileReader` 文件选择 |
+| `src/components/TaskBar/index.tsx` | 进度条双层渲染：底层浅色背景 + 内层 `progress%` 实色进度 |
+| `src/components/TaskRow/index.tsx` | 「持续时间」列旁增加进度百分比小标签 |
+| `src/components/TaskEditModal/index.tsx` | 新增「完成进度」滑块输入（0-100%） |
+| `src/components/TaskAddModal/index.tsx` | 新任务默认 `progress: 100` |
+| `src/components/TaskTable/index.tsx` | 改用 `getVisibleTasks`；新增 `searchQuery` prop |
+| `src/components/GanttTimeline/index.tsx` | 改用 `getVisibleTasks`；新增 `searchQuery` prop；水平分隔线按可见任务数渲染 |
+
+---
+
 ## [1.0.10] - 2026-04-18
 
 ### 新增
@@ -329,4 +382,4 @@
 
 ---
 
-*文档最后更新：2026-04-17*
+*文档最后更新：2026-04-29*

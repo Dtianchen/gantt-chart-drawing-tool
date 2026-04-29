@@ -40,13 +40,35 @@ export function useGanttExcelExport() {
       { v: '结束日期', t: 's' },
       { v: '工期(天)', t: 's' },
       { v: '颜色', t: 's' },
+      { v: '前置任务', t: 's' },
     ]
 
-    // ── 3. 任务数据行 ────────────────────────────────────────
-    const taskRows = tasks.map((task) => {
+    // ── 3. 按层级编号排序任务 ───────────────────────────────
+    const sortedTasks = [...tasks].sort((a, b) => {
+      const numA = calcTaskNumber(a.id, tasks)
+      const numB = calcTaskNumber(b.id, tasks)
+      const partsA = numA.split('.').map(Number)
+      const partsB = numB.split('.').map(Number)
+      const len = Math.max(partsA.length, partsB.length)
+      for (let i = 0; i < len; i++) {
+        const pa = partsA[i] ?? 0
+        const pb = partsB[i] ?? 0
+        if (pa !== pb) return pa - pb
+      }
+      return 0
+    })
+
+    // ── 4. 任务数据行 ────────────────────────────────────────
+    const taskRows = sortedTasks.map((task) => {
       const colorHex = TASK_COLOR_MAP[task.color] || '#64748B'
       const colorLabel = COLOR_LABELS[task.color] || task.color
       const taskNum = calcTaskNumber(task.id, tasks)
+      const predNames = (task.predecessors || [])
+        .map(pid => {
+          const pt = tasks.find(t => t.id === pid)
+          return pt ? `${calcTaskNumber(pt.id, tasks)} ${pt.name}` : pid
+        })
+        .join('、')
       return [
         { v: taskNum, t: 's' },
         { v: task.name, t: 's' },
@@ -54,6 +76,7 @@ export function useGanttExcelExport() {
         { v: task.endDate, t: 's' },
         { v: task.duration, t: 'n' },
         { v: colorLabel, t: 's', color: colorHex },
+        { v: predNames, t: 's' },
       ]
     })
 
@@ -71,6 +94,7 @@ export function useGanttExcelExport() {
       { wch: 14 },  // D: 结束日期
       { wch: 10 },  // E: 工期
       { wch: 10 },  // F: 颜色
+      { wch: 30 },  // G: 前置任务
     ]
 
     // ── 6. 设置标题行样式 ───────────────────────────────────
@@ -82,17 +106,17 @@ export function useGanttExcelExport() {
       ws['!merges'] = ws['!merges'] || []
     }
 
-    // 合并信息区（A1:F1 ~ A4:F4）
+    // 合并信息区（A1:G1 ~ A4:G4）
     ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } },
-      { s: { r: 1, c: 0 }, e: { r: 1, c: 5 } },
-      { s: { r: 2, c: 0 }, e: { r: 2, c: 5 } },
-      { s: { r: 3, c: 0 }, e: { r: 3, c: 5 } },
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 6 } },
     ]
 
     // 列标题行（第6行）样式
     const headerRowIdx = 5
-    for (let c = 0; c < 6; c++) {
+    for (let c = 0; c < 7; c++) {
       const addr = XLSX.utils.encode_cell({ r: headerRowIdx, c })
       if (!ws[addr]) continue
       ws[addr].s = {
@@ -105,17 +129,17 @@ export function useGanttExcelExport() {
     // 任务数据行样式
     for (let i = 0; i < taskRows.length; i++) {
       const rowIdx = headerRowIdx + 1 + i
-      const task = tasks[i]
+      const task = sortedTasks[i]
       const colorHex = TASK_COLOR_MAP[task.color] || '#64748b'
 
-      for (let c = 0; c < 6; c++) {
+      for (let c = 0; c < 7; c++) {
         const addr = XLSX.utils.encode_cell({ r: rowIdx, c })
         if (!ws[addr]) continue
 
         const isColorCol = c === 5
         ws[addr].s = {
           alignment: {
-            horizontal: c === 1 ? 'left' : 'center',
+            horizontal: c === 1 || c === 6 ? 'left' : 'center',
             vertical: 'center',
           },
           font: { sz: 11, color: { rgb: isColorCol ? colorHex : '374151' } },

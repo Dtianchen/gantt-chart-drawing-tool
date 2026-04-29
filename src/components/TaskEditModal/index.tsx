@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
-import { Task, TaskColor, TASK_COLORS, TASK_COLOR_MAP } from '../../types'
+import React, { useState, useEffect, useMemo } from 'react'
+import { X, Link2 } from 'lucide-react'
+import { Task, TaskColor, TASK_COLORS, TASK_COLOR_MAP, calcTaskNumber } from '../../types'
 import { addDays, getDaysBetween } from '../../utils/dateUtils'
 
 interface TaskEditModalProps {
@@ -19,9 +19,52 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
   const [duration, setDuration] = useState<number>(1)
   const [color, setColor] = useState<TaskColor>('red')
   const [taskParentId, setTaskParentId] = useState<string>('')
+  const [progress, setProgress] = useState<number>(100)
+  const [predecessors, setPredecessors] = useState<string[]>([])
 
   const isChildTask = !!task?.parentId
   const isParentTask = task ? allTasks.some(t => t.parentId === task.id) : false
+
+  // 可选的前置任务列表（排除自身、子孙、父任务链）
+  const availablePredecessors = useMemo(() => {
+    if (!task) return []
+    const excludeIds = new Set<string>([task.id])
+    // 排除子孙
+    const stack = [task.id]
+    while (stack.length) {
+      const id = stack.pop()!
+      const children = allTasks.filter(t => t.parentId === id)
+      for (const c of children) {
+        excludeIds.add(c.id)
+        stack.push(c.id)
+      }
+    }
+    // 排除父链上的任务（避免循环依赖）
+    let cur = allTasks.find(t => t.id === task.parentId)
+    while (cur) {
+      excludeIds.add(cur.id)
+      cur = allTasks.find(t => t.id === cur!.parentId)
+    }
+    return allTasks.filter(t => !excludeIds.has(t.id))
+  }, [task, allTasks])
+
+  // 按层级编号顺序排序（保持父子层级逻辑顺序）
+  const sortedPredecessors = useMemo(() => {
+    return [...availablePredecessors].sort((a, b) => {
+      const numA = calcTaskNumber(a.id, allTasks)
+      const numB = calcTaskNumber(b.id, allTasks)
+      // 按层级编号字符串比较（如 "2.3" < "2.4" < "3" < "4.1"）
+      const partsA = numA.split('.').map(Number)
+      const partsB = numB.split('.').map(Number)
+      const len = Math.max(partsA.length, partsB.length)
+      for (let i = 0; i < len; i++) {
+        const pa = partsA[i] ?? 0
+        const pb = partsB[i] ?? 0
+        if (pa !== pb) return pa - pb
+      }
+      return 0
+    })
+  }, [availablePredecessors, allTasks])
 
   useEffect(() => {
     if (task) {
@@ -31,6 +74,8 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
       setDuration(task.duration > 0 ? task.duration : getDaysBetween(task.startDate, task.endDate))
       setColor(task.color)
       setTaskParentId(task.parentId || '')
+      setProgress(task.progress ?? 100)
+      setPredecessors(task.predecessors || [])
     }
   }, [task])
 
@@ -73,7 +118,9 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
       endDate,
       color,
       duration,
+      progress,
       ...(taskParentId ? { parentId: taskParentId } : {}),
+      predecessors: predecessors.length > 0 ? predecessors : undefined,
     })
     onClose()
   }
@@ -179,6 +226,54 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
             </select>
+          </div>
+
+          {/* 前置任务 */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-600 flex items-center gap-1">
+              <Link2 size={12} />
+              前置任务
+            </label>
+            <div className="max-h-32 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+              {sortedPredecessors.length === 0 ? (
+                <p className="text-xs text-slate-400 py-1">无可选前置任务</p>
+              ) : (
+                sortedPredecessors.map(t => (
+                  <label key={t.id} className="flex items-center gap-2 text-sm text-slate-700 hover:bg-slate-50 rounded px-1 py-0.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={predecessors.includes(t.id)}
+                      onChange={e => {
+                        if (e.target.checked) {
+                          setPredecessors(prev => [...prev, t.id])
+                        } else {
+                          setPredecessors(prev => prev.filter(id => id !== t.id))
+                        }
+                      }}
+                      className="rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-[10px] text-slate-400 font-mono w-8 shrink-0">{calcTaskNumber(t.id, allTasks)}</span>
+                    <span className="truncate">{t.name}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* 完成进度 */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-600">完成进度（%）</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={progress}
+                onChange={e => setProgress(parseInt(e.target.value) || 0)}
+                className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+              />
+              <span className="text-sm font-medium text-slate-700 w-10 text-right">{progress}%</span>
+            </div>
           </div>
 
           {/* 颜色选择 */}

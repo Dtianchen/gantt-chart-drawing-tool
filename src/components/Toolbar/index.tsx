@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState } from 'react'
-import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X, ChevronDown, FileSpreadsheet } from 'lucide-react'
+import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X, ChevronDown, FileSpreadsheet, Undo2, Redo2, Search, FileJson, Upload } from 'lucide-react'
 import { TimeScale, SCALE_CONFIG } from '../../types'
 import { useGanttExport } from '../../hooks/useGanttExport'
 import { useGanttExcelExport } from '../../hooks/useGanttExcelExport'
@@ -37,6 +37,15 @@ interface ToolbarProps {
   tasks?: Task[]
   selectedTaskId?: string | null
   onAddSubTask?: (parentTask: Task) => void
+  onUndo?: () => void
+  onRedo?: () => void
+  canUndo?: boolean
+  canRedo?: boolean
+  onExportJSON?: () => void
+  onImportJSON?: (jsonString: string) => void
+  searchQuery?: string
+  onSearchChange?: (query: string) => void
+  searchInputRef?: React.RefObject<HTMLInputElement>
 }
 
 export default function Toolbar({
@@ -58,6 +67,15 @@ export default function Toolbar({
   tasks = [],
   selectedTaskId,
   onAddSubTask,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  onExportJSON,
+  onImportJSON,
+  searchQuery = '',
+  onSearchChange,
+  searchInputRef,
 }: ToolbarProps) {
   const { exportGanttAsImage } = useGanttExport()
   const { exportGanttAsExcel } = useGanttExcelExport()
@@ -67,6 +85,7 @@ export default function Toolbar({
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [customInputValue, setCustomInputValue] = useState(String(customDays))
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleExport = useCallback(async () => {
     if (exportRef.current) {
@@ -112,12 +131,72 @@ export default function Toolbar({
     setConfirmTemplate(null)
   }, [])
 
+  const handleImportFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      const text = String(reader.result)
+      onImportJSON?.(text)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+    reader.readAsText(file)
+    setShowExportMenu(false)
+  }, [onImportJSON])
+
   const btnBase = "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer active:scale-[0.97]"
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId)
 
   return (
     <div className="flex items-center gap-2">
+      {/* 搜索框 */}
+      <div className="relative">
+        <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        <input
+          ref={searchInputRef}
+          type="text"
+          value={searchQuery}
+          onChange={e => onSearchChange?.(e.target.value)}
+          placeholder="搜索任务... (Ctrl+F)"
+          className="pl-8 pr-3 py-1.5 text-sm rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition-all w-44"
+        />
+        {searchQuery && (
+          <button
+            onClick={() => onSearchChange?.('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          >
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
+      {/* 撤销 / 重做 */}
+      <div className="flex items-center gap-1">
+        <button
+          onClick={onUndo}
+          disabled={!canUndo}
+          className={`p-1.5 rounded-lg transition-colors ${
+            canUndo ? 'hover:bg-slate-100 text-slate-600 cursor-pointer' : 'text-slate-300 cursor-not-allowed'
+          }`}
+          title="撤销 (Ctrl+Z)"
+        >
+          <Undo2 size={16} />
+        </button>
+        <button
+          onClick={onRedo}
+          disabled={!canRedo}
+          className={`p-1.5 rounded-lg transition-colors ${
+            canRedo ? 'hover:bg-slate-100 text-slate-600 cursor-pointer' : 'text-slate-300 cursor-not-allowed'
+          }`}
+          title="重做 (Ctrl+Shift+Z / Ctrl+Y)"
+        >
+          <Redo2 size={16} />
+        </button>
+      </div>
+
+      <div className="w-px h-6 bg-slate-200 mx-1" />
+
       {/* 添加任务下拉菜单 */}
       <div className="relative">
         <button
@@ -172,7 +251,7 @@ export default function Toolbar({
           className={`${btnBase} bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow`}
         >
           <Download size={15} />
-          导出
+          导入导出
           <ChevronDown size={13} className={`transition-transform ${showExportMenu ? 'rotate-180' : ''}`} />
         </button>
 
@@ -180,9 +259,9 @@ export default function Toolbar({
           <>
             <div className="fixed inset-0 z-30" onClick={() => setShowExportMenu(false)} />
 
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[140px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[150px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
               <div className="px-3 pt-2 pb-1.5 border-b border-slate-100">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">导出格式</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">导入 / 导出</p>
               </div>
 
               <button
@@ -206,12 +285,41 @@ export default function Toolbar({
                   <p className="text-[10px] text-slate-400">XLSX 格式，可编辑</p>
                 </div>
               </button>
+
+              <button
+                onClick={() => { onExportJSON?.(); setShowExportMenu(false) }}
+                className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 transition-colors text-left"
+              >
+                <FileJson size={16} className="text-blue-500 shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-slate-700">导出 JSON</p>
+                  <p className="text-[10px] text-slate-400">数据备份与恢复</p>
+                </div>
+              </button>
+
+              <div className="border-t border-slate-100 mt-1 pt-1">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-amber-50 transition-colors text-left"
+                >
+                  <Upload size={16} className="text-amber-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">导入 JSON</p>
+                    <p className="text-[10px] text-slate-400">从备份恢复数据</p>
+                  </div>
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleImportFile}
+                  className="hidden"
+                />
+              </div>
             </div>
           </>
         )}
       </div>
-
-      <div className="w-px h-6 bg-slate-200 mx-1" />
 
       {/* 视图切换下拉菜单 */}
       <div className="relative">

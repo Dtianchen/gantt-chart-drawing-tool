@@ -106,8 +106,11 @@ export default function TaskRow({
         </div>
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-black shrink-0 border-r border-black task-cell text-xs`}>
-        {task.duration}<span className="ml-0.5">天</span>
+      <div className={`w-20 flex items-center justify-center text-black shrink-0 border-r border-black task-cell text-xs gap-1`}>
+        <span>{task.duration}天</span>
+        {task.progress !== undefined && task.progress < 100 && (
+          <span className="text-[10px] text-amber-600 font-medium">{task.progress}%</span>
+        )}
       </div>
 
       <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 border-r border-black task-cell text-xs`}>

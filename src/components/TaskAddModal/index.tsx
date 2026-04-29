@@ -102,6 +102,7 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
       endDate,
       color,
       duration: getDaysBetween(startDate, endDate),
+      progress: 100,
       ...(taskParentId ? { parentId: taskParentId } : {}),
     })
     onClose()

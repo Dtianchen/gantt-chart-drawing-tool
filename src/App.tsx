@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState } from 'react'
+import React, { useRef, useCallback, useState, useEffect, useMemo } from 'react'
 import GanttChart from './components/GanttChart'
 import ProjectHeader from './components/ProjectHeader'
 import Toolbar from './components/Toolbar'
@@ -14,8 +14,9 @@ import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH } from './types'
 
 export default function App() {
   const exportRef = useRef<HTMLDivElement | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [scale, setScale] = useState<TimeScale>('day')
-  const [customDays, setCustomDays] = useState<number>(2) // 自定义视图：每格代表的天数，默认2天
+  const [customDays, setCustomDays] = useState<number>(2)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [addingTask, setAddingTask] = useState<boolean>(false)
   const [addingSubTaskOf, setAddingSubTaskOf] = useState<Task | null>(null)
@@ -23,6 +24,8 @@ export default function App() {
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false)
   const [expandedTaskIds, setExpandedTaskIds] = useState<Set<string>>(new Set())
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [saveToast, setSaveToast] = useState<boolean>(false)
 
   const {
     projectName,
@@ -34,6 +37,12 @@ export default function App() {
     resizeTask,
     updateProjectName,
     loadTemplate,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    exportProject,
+    importProject,
   } = useTaskManager()
 
   const scaleConfig = SCALE_CONFIG[scale]
@@ -118,6 +127,77 @@ export default function App() {
     setEditingTask(null)
   }, [])
 
+  // ── 全局快捷键 ─────────────────────────────────────────────
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement
+      if (isInput && e.key !== 'Escape') return
+
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key.toLowerCase()) {
+          case 'z':
+            e.preventDefault()
+            if (e.shiftKey) redo()
+            else undo()
+            break
+          case 'y':
+            e.preventDefault()
+            redo()
+            break
+          case 'n':
+            e.preventDefault()
+            setAddingTask(true)
+            break
+          case 'f':
+            e.preventDefault()
+            searchInputRef.current?.focus()
+            break
+          case 's':
+            e.preventDefault()
+            setSaveToast(true)
+            setTimeout(() => setSaveToast(false), 1500)
+            break
+        }
+      }
+
+      if (e.key === 'Delete' && selectedTaskId) {
+        e.preventDefault()
+        deleteTask(selectedTaskId)
+        setSelectedTaskId(null)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [undo, redo, deleteTask, selectedTaskId])
+
+  // ── 搜索过滤 ───────────────────────────────────────────────
+  // 搜索时自动展开包含匹配项的父任务
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+    const query = searchQuery.trim().toLowerCase()
+    const matchedParentIds = new Set<string>()
+    for (const task of tasks) {
+      if (task.name.toLowerCase().includes(query) && task.parentId) {
+        let cur: Task | undefined = task
+        while (cur?.parentId) {
+          matchedParentIds.add(cur.parentId)
+          cur = tasks.find(t => t.id === cur!.parentId)
+        }
+      }
+    }
+    if (matchedParentIds.size > 0) {
+      setExpandedTaskIds(prev => new Set([...prev, ...matchedParentIds]))
+    }
+  }, [searchQuery, tasks])
+
+  const handleImportJSON = useCallback((jsonString: string) => {
+    const ok = importProject(jsonString)
+    if (!ok) {
+      alert('导入失败：文件格式不正确')
+    }
+  }, [importProject])
+
   return (
     <div className="h-dvh flex flex-col bg-white">
       {/* 顶部标题 */}
@@ -125,6 +205,13 @@ export default function App() {
         <h1 className="text-lg font-bold text-white tracking-wider">进度计划甘特图绘制工具</h1>
         <p className="text-xs text-white/80 mt-1 tracking-wide">让绘制甘特图变得简单</p>
       </div>
+
+      {/* 保存提示 */}
+      {saveToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-in fade-in slide-in-from-top-2">
+          已自动保存到本地
+        </div>
+      )}
 
       {/* 头部 */}
       <ProjectHeader
@@ -153,6 +240,15 @@ export default function App() {
             tasks={tasks}
             selectedTaskId={selectedTaskId}
             onAddSubTask={handleAddSubTaskClick}
+            onUndo={undo}
+            onRedo={redo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            onExportJSON={exportProject}
+            onImportJSON={handleImportJSON}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchInputRef={searchInputRef}
           />
         }
       />
@@ -177,6 +273,7 @@ export default function App() {
           }}
           selectedTaskId={selectedTaskId}
           onSelectTask={t => setSelectedTaskId(t.id)}
+          searchQuery={searchQuery}
         />
         <GanttTimeline
           tasks={tasks}
@@ -188,6 +285,7 @@ export default function App() {
           onUpdateTask={updateTask}
           onResizeTask={resizeTask}
           onEditTask={handleEditTask}
+          searchQuery={searchQuery}
         />
       </GanttChart>
 

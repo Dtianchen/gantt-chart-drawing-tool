@@ -15,6 +15,7 @@ import {
 } from '@dnd-kit/sortable'
 import TaskRow from '../TaskRow'
 import { Task, TimeScale } from '../../types'
+import { getVisibleTasks } from '../../utils/taskUtils'
 
 interface TaskTableProps {
   tasks: Task[]
@@ -27,6 +28,7 @@ interface TaskTableProps {
   onToggleExpand?: (taskId: string) => void
   selectedTaskId?: string | null
   onSelectTask?: (task: Task) => void
+  searchQuery?: string
 }
 
 export default function TaskTable({
@@ -40,6 +42,7 @@ export default function TaskTable({
   onToggleExpand: externalToggleExpand,
   selectedTaskId: externalSelectedId,
   onSelectTask,
+  searchQuery,
 }: TaskTableProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -70,25 +73,7 @@ export default function TaskTable({
     }
   }
 
-  // 收集要显示的任务（顶级 + 展开的子任务）
-  const visibleTasks: { task: Task; depth: number }[] = []
-  const topLevelTasks = tasks.filter(t => !t.parentId)
-
-  for (const task of topLevelTasks) {
-    visibleTasks.push({ task, depth: 0 })
-    if (expandedIds.has(task.id)) {
-      const children = tasks.filter(t => t.parentId === task.id)
-      for (const child of children) {
-        visibleTasks.push({ task: child, depth: 1 })
-        if (expandedIds.has(child.id)) {
-          const grandchildren = tasks.filter(t => t.parentId === child.id)
-          for (const gc of grandchildren) {
-            visibleTasks.push({ task: gc, depth: 2 })
-          }
-        }
-      }
-    }
-  }
+  const visibleTasks = getVisibleTasks(tasks, expandedIds, searchQuery)
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event
@@ -123,11 +108,11 @@ export default function TaskTable({
         <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
           <div className="flex-1 overflow-y-auto gantt-scroll">
             {visibleTasks.length > 0 ? (
-              visibleTasks.map(({ task, depth }) => (
+              visibleTasks.map(({ task, depth, index }) => (
                 <TaskRow
                   key={task.id}
                   task={task}
-                  index={tasks.indexOf(task)}
+                  index={index}
                   scale={scale}
                   onEdit={onEditTask}
                   depth={depth}
@@ -141,7 +126,7 @@ export default function TaskTable({
               ))
             ) : (
               <div className={`flex items-center justify-center h-full text-slate-400 text-sm`}>
-                暂无任务，点击上方"添加任务"按钮开始或选择模板填充数据
+                {searchQuery ? '未找到匹配的任务' : '暂无任务，点击上方"添加任务"按钮开始或选择模板填充数据'}
               </div>
             )}
           </div>

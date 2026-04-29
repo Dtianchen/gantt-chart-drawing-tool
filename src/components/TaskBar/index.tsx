@@ -102,17 +102,20 @@ export default function TaskBar({ task, tasks, startDate, endDate, dayWidth, sca
     }
   }, [resizing, dragging, dayWidth, dateRange, startIndex, endIndex, task.id, task.startDate, task.endDate, onResize])
 
+  const barWidth = Math.max(widthPx, 8)
+
   return (
     <div className="relative h-full flex items-center justify-center px-0.5 group">
+      {/* 任务条背景（不含文字，允许 overflow-hidden 裁切边界） */}
       <div
         onMouseDown={handleDragStart}
         onClick={() => !didDragRef.current && onEdit(task)}
-        className="absolute rounded shadow-sm cursor-grab active:cursor-grabbing transition-all hover:shadow-md hover:brightness-110"
+        className="absolute rounded shadow-sm cursor-grab active:cursor-grabbing transition-all hover:shadow-md hover:brightness-110 overflow-hidden"
         style={{
           left: leftPx,
-          width: Math.max(widthPx, 8),
+          width: barWidth,
           height: isParent ? 22 : 20,
-          backgroundColor: isParent ? 'transparent' : color,
+          backgroundColor: isParent ? 'transparent' : `${color}33`,
           backgroundImage: isParent
             ? `repeating-linear-gradient(45deg, ${color}88, ${color}88 4px, ${color}55 4px, ${color}55 8px)`
             : 'none',
@@ -121,19 +124,17 @@ export default function TaskBar({ task, tasks, startDate, endDate, dayWidth, sca
           transform: 'translateY(-50%)',
         }}
       >
-        <div className="h-full flex items-center justify-center px-2 overflow-visible whitespace-nowrap select-none min-w-0">
-          <div className="relative w-full h-full flex items-center justify-center pointer-events-none min-w-0">
-            <span 
-              className={`text-black font-medium text-xs whitespace-nowrap flex-shrink-0`}
-              style={{ 
-                maxWidth: 'none',
-                lineHeight: '1.2'
-              }}
-            >
-              {task.name}
-            </span>
-          </div>
-        </div>
+        {/* 实际完成进度条 */}
+        {!isParent && (
+          <div
+            className="absolute top-0 left-0 h-full pointer-events-none"
+            style={{
+              width: `${task.progress ?? 100}%`,
+              backgroundColor: color,
+              opacity: 0.85,
+            }}
+          />
+        )}
 
         {/* 左拖拽手柄 */}
         <div
@@ -148,6 +149,26 @@ export default function TaskBar({ task, tasks, startDate, endDate, dayWidth, sca
           className="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize rounded-r hover:bg-white/20"
           style={{ zIndex: 10 }}
         />
+      </div>
+
+      {/* 任务名称文字层：放在 overflow-hidden 容器外，可自由溢出 */}
+      <div
+        className="absolute flex items-center justify-center whitespace-nowrap select-none pointer-events-none"
+        style={{
+          left: leftPx,
+          width: barWidth,
+          height: isParent ? 22 : 20,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 15,
+        }}
+      >
+        <span
+          className="text-black font-medium text-xs whitespace-nowrap"
+          style={{ lineHeight: '1.2' }}
+        >
+          {task.name}
+        </span>
       </div>
     </div>
   )
