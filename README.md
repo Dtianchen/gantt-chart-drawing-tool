@@ -17,7 +17,7 @@
 ### 主界面（自定义视图）
 
 <p align="center">
-  <img src="https://gitee.com/Dtianchen/gantt-chart-drawing-tool/raw/master/screenshot-main.png" alt="进度工具主界面 - 自定义视图（每格3天）" width="900" />
+  <img src="screenshot-main.png" alt="进度工具主界面 - 自定义视图（每格3天）" width="900" />
 </p>
 
 \*\*自定义视图（每格3天）\*\*模式下的完整界面，包含：
