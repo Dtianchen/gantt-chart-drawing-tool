@@ -20,6 +20,7 @@ const TEMPLATE_OPTIONS: TemplateOption[] = [
 
 interface ToolbarProps {
   onAddTask: () => void
+  onInsertTask?: (afterTaskId: string) => void
   onScaleChange: (scale: TimeScale) => void
   onCustomDaysChange?: (days: number) => void
   customDays?: number
@@ -50,6 +51,7 @@ interface ToolbarProps {
 
 export default function Toolbar({
   onAddTask,
+  onInsertTask,
   onScaleChange,
   onCustomDaysChange,
   customDays = 2,
@@ -211,7 +213,7 @@ export default function Toolbar({
           <>
             <div className="fixed inset-0 z-30" onClick={() => setShowAddMenu(false)} />
 
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[140px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[160px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
               <button
                 onClick={() => { onAddTask(); setShowAddMenu(false) }}
                 className="w-full flex items-center gap-2 px-3 py-2 hover:bg-blue-50 transition-colors text-left"
@@ -222,6 +224,24 @@ export default function Toolbar({
                   <p className="text-[10px] text-slate-400">创建新的父级任务</p>
                 </div>
               </button>
+
+              {onInsertTask && (
+                <button
+                  onClick={() => { selectedTaskId && onInsertTask(selectedTaskId); setShowAddMenu(false) }}
+                  disabled={!selectedTaskId}
+                  className={`w-full flex items-center gap-2 px-3 py-2 transition-colors text-left ${
+                    selectedTaskId ? 'hover:bg-green-50' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  <Plus size={16} className="text-green-500 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-slate-700">插入任务</p>
+                    <p className="text-[10px] text-slate-400">
+                      {selectedTask ? `在「${selectedTask.name}」后插入` : '请先选中一个任务'}
+                    </p>
+                  </div>
+                </button>
+              )}
 
               {onAddSubTask && (
                 <button

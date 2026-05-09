@@ -4,6 +4,56 @@
 
 ---
 
+## [1.0.12] - 2026-05-09
+
+### 新增
+
+- **插入任务功能**
+  - 选中任务后，点击工具栏「添加任务」→「插入任务」可在该任务之后插入新任务
+  - 插入任务的默认开始时间 = 选中任务结束时间 + 1 天
+  - 任务名称自动编号（如选中第2个任务，新任务名称为"3. 新任务"）
+
+- **里程碑事件完整支持**
+  - 任务标记为里程碑时，编辑/添加菜单只显示一个时间点（无持续时间和结束时间）
+  - 任务信息栏中里程碑不显示持续时间，显示"里程碑"标签
+  - Excel 导出新增「里程碑」列，里程碑任务显示"是"，持续时间为0，结束日期显示"-"
+
+- **帮助模块增强**
+  - 新增「关于项目」区域，显示当前版本号和作者信息（Dtianchen / sfgtfqssy@gmail.com）
+  - 新增 Gitee 和 GitHub 双仓库链接
+  - 新增版本更新检查功能，支持从 Gitee 或 GitHub 检查最新版本
+  - 发现新版本时显示版本对比和下载链接
+
+### 修复
+
+- **Excel 导出里程碑问题**：修复导出时里程碑仍显示持续时间的问题，现在里程碑正确显示持续时间为0
+- **依赖线显示问题**：修复日视图/自定义视图、展开/收起子任务时依赖线坐标错误的问题
+- **代码质量问题**：修复 `SCALE_CONFIG.custom.daysPerUnit` 类型定义不一致问题
+
+### 性能优化
+
+- **calcParentDates 函数优化**：使用 BFS 从叶子节点向上更新父任务日期，仅更新受影响的任务链
+- **依赖线计算优化**：添加防抖机制，使用 `requestAnimationFrame` 避免频繁计算
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `src/hooks/useTaskManager.ts` | `addTask` 新增 `insertAfterId` 参数支持插入任务 |
+| `src/components/Toolbar/index.tsx` | 添加任务菜单新增「插入任务」选项 |
+| `src/components/TaskAddModal/index.tsx` | 支持插入任务的默认日期和编号计算 |
+| `src/components/TaskRow/index.tsx` | 里程碑任务显示优化 |
+| `src/components/TaskEditModal/index.tsx` | 里程碑任务表单简化（只显示开始日期） |
+| `src/hooks/useGanttExcelExport.ts` | 新增里程碑列，修复持续时间显示 |
+| `src/types/index.ts` | 修复类型定义，优化 `calcParentDates` 算法 |
+| `src/components/GanttTimeline/index.tsx` | 依赖线计算防抖优化 |
+| `src/components/HelpModal/index.tsx` | 更新帮助文档，新增版本信息、作者信息、Gitee/GitHub双仓库更新检查 |
+| `src/hooks/useCheckUpdate.ts` | 新增版本更新检查 Hook，支持 Gitee 和 GitHub 两个仓库 |
+| `vite.config.ts` | 添加 `__APP_VERSION__` 全局常量配置 |
+| `package.json` | 版本号 1.0.11 → 1.0.12 |
+
+---
+
 ## [1.0.11] - 2026-04-29
 
 ### 新增
@@ -382,4 +432,4 @@
 
 ---
 
-*文档最后更新：2026-04-29*
+*文档最后更新：2026-05-09*

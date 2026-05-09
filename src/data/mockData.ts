@@ -13,6 +13,16 @@ export const mockTasks: Task[] = [
     color: 'purple',
   },
   {
+    id: 'milestone-1',
+    name: '需求评审完成',
+    duration: 0,
+    startDate: '2026-04-30',
+    endDate: '2026-04-30',
+    color: 'purple',
+    isMilestone: true,
+    status: 'completed',
+  },
+  {
     id: 'task-2',
     name: '项目 kickoff 会议与目标对齐',
     duration: 3,
@@ -101,6 +111,16 @@ export const mockTasks: Task[] = [
     startDate: '2026-05-20',
     endDate: '2026-05-22',
     color: 'blue',
+  },
+  {
+    id: 'milestone-2',
+    name: '设计评审完成',
+    duration: 0,
+    startDate: '2026-05-22',
+    endDate: '2026-05-22',
+    color: 'blue',
+    isMilestone: true,
+    status: 'completed',
   },
 
   // ========== 第三阶段：开发环境搭建（第28-38天）==========
@@ -225,6 +245,16 @@ export const mockTasks: Task[] = [
     startDate: '2026-07-13',
     endDate: '2026-07-17',
     color: 'blue',
+  },
+  {
+    id: 'milestone-3',
+    name: '后端开发完成',
+    duration: 0,
+    startDate: '2026-07-17',
+    endDate: '2026-07-17',
+    color: 'blue',
+    isMilestone: true,
+    status: 'completed',
   },
 
   // ========== 第五阶段：前端开发（第46-95天，与后端并行）==========
@@ -451,12 +481,32 @@ export const mockTasks: Task[] = [
     color: 'orange',
   },
   {
+    id: 'milestone-4',
+    name: 'UAT验收通过',
+    duration: 0,
+    startDate: '2026-09-08',
+    endDate: '2026-09-08',
+    color: 'purple',
+    isMilestone: true,
+    status: 'completed',
+  },
+  {
     id: 'task-55',
     name: '正式上线发布（灰度发布 → 全量开放）',
     duration: 3,
     startDate: '2026-09-17',
     endDate: '2026-09-19',
     color: 'purple',
+  },
+  {
+    id: 'milestone-5',
+    name: '项目正式上线',
+    duration: 0,
+    startDate: '2026-09-19',
+    endDate: '2026-09-19',
+    color: 'green',
+    isMilestone: true,
+    status: 'in-progress',
   },
   {
     id: 'task-56',

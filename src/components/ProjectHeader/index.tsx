@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-react'
+
 
 interface ProjectHeaderProps {
   projectName: string
@@ -27,14 +27,14 @@ export default function ProjectHeader({
       {/* 第二行：项目名称 + 开始时间 + 结束时间 + 计划工期 */}
       <div className="h-9 flex items-center gap-2 px-[26px] md:px-[34px] border-t border-slate-200 text-sm">
         <div className="flex items-center gap-1 shrink-0">
-          <Pencil size={12} className="text-gray-400 shrink-0" />
+          <span className="text-gray-500">项目名称:</span>
           <input
             type="text"
             value={projectName}
             onChange={(e) => onNameChange(e.target.value)}
             className="bg-transparent text-gray-800 font-semibold outline-none border-b border-transparent hover:border-gray-300 focus:border-blue-400 transition-colors min-w-[40px]"
             style={{ width: Math.max(projectName.length * 14 + 10, 50) + 'px' }}
-            placeholder="项目名称"
+            placeholder="请输入项目名称"
           />
         </div>
 

@@ -6,16 +6,16 @@ interface TimeScaleHeaderProps {
   startDate: string
   endDate: string
   scale: TimeScale
-  dayWidth: number
+  dayWidth?: number
   customDays?: number
 }
 
-export default function TimeScaleHeader({ startDate, endDate, scale, dayWidth, customDays = 2 }: TimeScaleHeaderProps) {
+export default function TimeScaleHeader({ startDate, endDate, scale, customDays = 2 }: TimeScaleHeaderProps) {
   if (scale === 'day') {
-    return <DayViewHeader startDate={startDate} endDate={endDate} cellWidth={dayWidth} />
+    return <DayViewHeader startDate={startDate} endDate={endDate} cellWidth={UNIT_WIDTH} />
   }
 
-  // custom → 单元模式，每格28px，双行表头 + 工程标尺行
+  // custom → 单元模式，每格固定显示28px
   return <CustomViewHeader startDate={startDate} endDate={endDate} cellWidth={UNIT_WIDTH} customDays={customDays} />
 }
 
@@ -114,6 +114,9 @@ function CustomViewHeader({
 }) {
   const daysPerUnit = customDays ?? 2
   const units = generateDateUnits(startDate, endDate, daysPerUnit)
+  
+  // 每个单元的宽度固定为 UNIT_WIDTH(28px)，与视图无关
+  const unitWidth = UNIT_WIDTH
 
   // 上层：按年月分组（跨单元合并同年同月）
   const yearMonthGroups: { label: string; width: number }[] = []
@@ -122,7 +125,7 @@ function CustomViewHeader({
     if (yearMonthGroups.length === 0 || yearMonthGroups[yearMonthGroups.length - 1].label !== ymLabel) {
       yearMonthGroups.push({ label: ymLabel, width: 0 })
     }
-    yearMonthGroups[yearMonthGroups.length - 1].width += cellWidth
+    yearMonthGroups[yearMonthGroups.length - 1].width += unitWidth
   })
 
   // 计算每个单元结束时的累计天数（用于工程标尺）
@@ -152,7 +155,7 @@ function CustomViewHeader({
             <div
               key={i}
               className={`shrink-0 flex flex-col items-center justify-end border-r border-slate-200 last:border-r-0 ${endDate.day() === 0 || endDate.day() === 6 ? 'bg-red-100/40' : ''}`}
-              style={{ width: cellWidth, height: '100%' }}
+              style={{ width: unitWidth, height: '100%' }}
             >
               <div className="flex flex-col items-center">
                 <span className={`text-[10px] leading-none ${endDate.day() === 0 || endDate.day() === 6 ? 'text-red-500' : 'text-slate-700'}`}>{endDate.date()}</span>
@@ -164,7 +167,7 @@ function CustomViewHeader({
 
         <div className="absolute bottom-0 left-0 right-0 flex">
           {units.map((_, i) => (
-            <div key={i} className="border-l border-slate-200 shrink-0" style={{ width: cellWidth, height: '1px' }} />
+            <div key={i} className="border-l border-slate-200 shrink-0" style={{ width: unitWidth, height: '1px' }} />
           ))}
         </div>
       </div>
@@ -176,7 +179,7 @@ function CustomViewHeader({
           // 每5天显示一次刻度数字
           const showRuler = dayNum % 5 === 0 || i === 0
           return (
-            <div key={i} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: cellWidth }}>
+            <div key={i} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: unitWidth }}>
               {showRuler && (
                 <span className="text-[11px] font-semibold text-blue-500">{dayNum}</span>
               )}
@@ -186,7 +189,7 @@ function CustomViewHeader({
 
         <div className="absolute bottom-0 left-0 right-0 flex">
           {units.map((_, i) => (
-            <div key={i} className="border-l border-slate-200 shrink-0" style={{ width: cellWidth, height: '1px' }} />
+            <div key={i} className="border-l border-slate-200 shrink-0" style={{ width: unitWidth, height: '1px' }} />
           ))}
         </div>
       </div>

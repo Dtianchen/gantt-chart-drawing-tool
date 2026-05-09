@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { X, Link2 } from 'lucide-react'
-import { Task, TaskColor, TASK_COLORS, TASK_COLOR_MAP, calcTaskNumber } from '../../types'
+import { X, Link2, Diamond } from 'lucide-react'
+import { Task, TaskColor, TaskStatus, TASK_COLORS, TASK_COLOR_MAP, TASK_STATUS_CONFIG, calcTaskNumber } from '../../types'
 import { addDays, getDaysBetween } from '../../utils/dateUtils'
 
 interface TaskEditModalProps {
@@ -21,11 +21,13 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
   const [taskParentId, setTaskParentId] = useState<string>('')
   const [progress, setProgress] = useState<number>(100)
   const [predecessors, setPredecessors] = useState<string[]>([])
+  const [status, setStatus] = useState<TaskStatus>('pending')
+  const [isMilestone, setIsMilestone] = useState(false)
 
   const isChildTask = !!task?.parentId
   const isParentTask = task ? allTasks.some(t => t.parentId === task.id) : false
 
-  // 可选的前置任务列表（排除自身、子孙、父任务链）
+  // 可选的前置任务列表（排除自身、子孙、父任务链，且只显示开始日期在当前任务之前的任务）
   const availablePredecessors = useMemo(() => {
     if (!task) return []
     const excludeIds = new Set<string>([task.id])
@@ -45,7 +47,8 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
       excludeIds.add(cur.id)
       cur = allTasks.find(t => t.id === cur!.parentId)
     }
-    return allTasks.filter(t => !excludeIds.has(t.id))
+    // 只显示开始日期在当前任务之前或同一天的任务
+    return allTasks.filter(t => !excludeIds.has(t.id) && t.startDate <= task.startDate)
   }, [task, allTasks])
 
   // 按层级编号顺序排序（保持父子层级逻辑顺序）
@@ -76,6 +79,8 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
       setTaskParentId(task.parentId || '')
       setProgress(task.progress ?? 100)
       setPredecessors(task.predecessors || [])
+      setStatus(task.status ?? 'pending')
+      setIsMilestone(task.isMilestone ?? false)
     }
   }, [task])
 
@@ -119,6 +124,8 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
       color,
       duration,
       progress,
+      status,
+      isMilestone,
       ...(taskParentId ? { parentId: taskParentId } : {}),
       predecessors: predecessors.length > 0 ? predecessors : undefined,
     })
@@ -162,54 +169,73 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
             />
           </div>
 
-          {/* 开始时间 + 持续时间 */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* 里程碑：只显示一个时间点 */}
+          {isMilestone ? (
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-600">
-                开始时间 {isParentTask && <span className="text-emerald-500 text-[10px]">（自动）</span>}
-              </label>
+              <label className="text-xs font-medium text-slate-600">里程碑时间点</label>
               <input
                 type="date"
                 value={startDate}
-                onChange={handleStartDateChange}
-                disabled={isParentTask}
-                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                onChange={e => {
+                  setStartDate(e.target.value)
+                  setEndDate(e.target.value)
+                  setDuration(0)
+                }}
+                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-600">持续时间（天）</label>
-              <input
-                type="number"
-                value={duration}
-                onChange={handleDurationChange}
-                min={1}
-                max={999}
-                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* 结束时间（可手动选择或自动计算） */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5 col-span-1">
-              <label className="text-xs font-medium text-slate-600">
-                结束时间 {isParentTask && <span className="text-emerald-500 text-[10px]">（自动）</span>}
-              </label>
-              <input
-                type="date"
-                value={endDate}
-                onChange={handleEndDateChange}
-                min={startDate || undefined}
-                disabled={isParentTask}
-                className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white disabled:bg-slate-100 disabled:text-slate-400"
-              />
-            </div>
-            {startDate && endDate && (
-              <div className="flex items-end justify-center text-xs text-emerald-600 font-medium pb-[9px]">
-                共 {getDaysBetween(startDate, endDate)} 天
+          ) : (
+            <>
+              {/* 开始时间 + 持续时间 */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600">
+                    开始时间 {isParentTask && <span className="text-emerald-500 text-[10px]">（自动）</span>}
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={handleStartDateChange}
+                    disabled={isParentTask}
+                    className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-600">持续时间（天）</label>
+                  <input
+                    type="number"
+                    value={duration}
+                    onChange={handleDurationChange}
+                    min={1}
+                    max={999}
+                    className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all"
+                  />
+                </div>
               </div>
-            )}
-          </div>
+
+              {/* 结束时间（可手动选择或自动计算） */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-xs font-medium text-slate-600">
+                    结束时间 {isParentTask && <span className="text-emerald-500 text-[10px]">（自动）</span>}
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={handleEndDateChange}
+                    min={startDate || undefined}
+                    disabled={isParentTask}
+                    className="w-full h-10 px-3 text-sm border border-slate-300 rounded-lg outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                  />
+                </div>
+                {startDate && endDate && (
+                  <div className="flex items-end justify-center text-xs text-emerald-600 font-medium pb-[9px]">
+                    共 {getDaysBetween(startDate, endDate)} 天
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           {/* 父任务选择 */}
           <div className="space-y-1.5">
@@ -221,9 +247,9 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
             >
               <option value="">无（顶级任务）</option>
               {allTasks
-                .filter(t => !t.parentId && t.id !== task?.id)
+                .filter(t => !t.parentId && t.id !== task?.id && (!task || t.startDate <= task.startDate))
                 .map(t => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
+                  <option key={t.id} value={t.id}>{calcTaskNumber(t.id, allTasks)} {t.name}</option>
                 ))}
             </select>
           </div>
@@ -292,6 +318,53 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
                 />
               ))}
             </div>
+          </div>
+
+          {/* 任务状态 */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-slate-600">任务状态</label>
+            <div className="flex gap-2">
+              {(Object.keys(TASK_STATUS_CONFIG) as TaskStatus[]).map(key => {
+                const cfg = TASK_STATUS_CONFIG[key]
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setStatus(key)}
+                    className={`px-3 py-1.5 text-xs rounded-lg border transition-all cursor-pointer ${
+                      status === key
+                        ? 'border-current font-medium'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                    style={{
+                      color: status === key ? cfg.color : '#6b7280',
+                      backgroundColor: status === key ? cfg.bgColor : 'transparent',
+                      borderColor: status === key ? cfg.color : undefined,
+                    }}
+                  >
+                    {cfg.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* 里程碑 */}
+          <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+            <button
+              onClick={() => setIsMilestone(!isMilestone)}
+              className={`w-5 h-5 rounded flex items-center justify-center transition-all cursor-pointer ${
+                isMilestone ? 'bg-amber-400 text-white' : 'bg-white border border-slate-300'
+              }`}
+            >
+              {isMilestone && <Diamond size={12} fill="currentColor" />}
+            </button>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-amber-800">里程碑</p>
+              <p className="text-[11px] text-amber-600">标记项目中的重要节点</p>
+            </div>
+            <span className={`text-xs font-medium ${isMilestone ? 'text-amber-600' : 'text-slate-400'}`}>
+              {isMilestone ? '是' : '否'}
+            </span>
           </div>
         </div>
 

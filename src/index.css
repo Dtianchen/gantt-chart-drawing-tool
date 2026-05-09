@@ -100,6 +100,21 @@ body {
   position: relative;
 }
 
+/* 依赖连接线动画 */
+.dependency-line {
+  transition: all 0.2s ease-in-out;
+}
+
+.dependency-line:hover {
+  stroke: #4f46e5;
+  stroke-width: 3;
+}
+
+/* 任务条悬停效果增强 */
+.task-bar-hover-glow {
+  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.5));
+}
+
 /* 甘特图行分隔线扩展样式 */
 .gantt-row::after {
   content: '';

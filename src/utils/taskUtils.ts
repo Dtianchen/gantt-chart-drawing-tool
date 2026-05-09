@@ -48,7 +48,7 @@ export function getVisibleTasks(
         if (!isMatchOrAncestor) continue
       }
 
-      visibleTasks.push({ task, depth, index: tasks.indexOf(task) })
+      visibleTasks.push({ task, depth, index: visibleTasks.length })
 
       const shouldExpand = query
         ? matchedIds.has(task.id) || Array.from(matchedIds).some(mid => {

@@ -56,14 +56,14 @@ export default function TaskRow({
       style={style}
       className={`flex items-center gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
         index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-      } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''} border-b border-black ${
+      } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''} border-b border-slate-200 ${
         isSelected ? 'bg-blue-100/70' : ''
       }`}
       onDoubleClick={() => onEdit?.(task)}
       onClick={() => onSelect?.(task)}
       title={`双击编辑：${task.name}`}
     >
-      <div className={`w-10 flex items-center justify-center text-black font-mono shrink-0 border-r border-black task-cell relative text-xs`}>
+      <div className={`w-10 flex items-center justify-center text-black font-mono shrink-0 border-r border-slate-200 task-cell relative text-xs`}>
         <button
           {...attributes}
           {...listeners}
@@ -74,7 +74,7 @@ export default function TaskRow({
         <span className="font-mono">{taskNumber}</span>
       </div>
 
-      <div className="flex-1 px-2 min-w-0 border-r border-black task-cell" style={{ paddingLeft: depth * 16 + 8 }}>
+      <div className="flex-1 px-2 min-w-0 border-r border-slate-200 task-cell" style={{ paddingLeft: depth * 16 + 8 }}>
         <div className="flex items-center h-full">
           {/* 展开/收起图标 */}
           {hasChildren ? (
@@ -106,19 +106,29 @@ export default function TaskRow({
         </div>
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-black shrink-0 border-r border-black task-cell text-xs gap-1`}>
-        <span>{task.duration}天</span>
-        {task.progress !== undefined && task.progress < 100 && (
-          <span className="text-[10px] text-amber-600 font-medium">{task.progress}%</span>
+      <div className={`w-20 flex items-center justify-center text-black shrink-0 border-r border-slate-200 task-cell text-xs gap-1`}>
+        {task.isMilestone ? (
+          <span className="text-amber-600 font-medium">里程碑</span>
+        ) : (
+          <>
+            <span>{task.duration}天</span>
+            {task.progress !== undefined && task.progress < 100 && (
+              <span className="text-[10px] text-amber-600 font-medium">{task.progress}%</span>
+            )}
+          </>
         )}
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 border-r border-black task-cell text-xs`}>
+      <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 border-r border-slate-200 task-cell text-xs`}>
         {formatFullDate(task.startDate)}
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 font-mono border-r border-black task-cell text-xs`}>
-        {formatFullDate(task.endDate)}
+      <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 font-mono border-r border-slate-200 task-cell text-xs`}>
+        {task.isMilestone ? (
+          <span className="text-slate-400">—</span>
+        ) : (
+          formatFullDate(task.endDate)
+        )}
       </div>
     </div>
   )

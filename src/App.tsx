@@ -8,7 +8,7 @@ import TaskEditModal from './components/TaskEditModal'
 import TaskAddModal from './components/TaskAddModal'
 import HelpModal from './components/HelpModal'
 import { useTaskManager } from './hooks/useTaskManager'
-import { addDays } from './utils/dateUtils'
+import { addDays, getTotalDuration } from './utils/dateUtils'
 import dayjs from 'dayjs'
 import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH } from './types'
 
@@ -20,6 +20,7 @@ export default function App() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [addingTask, setAddingTask] = useState<boolean>(false)
   const [addingSubTaskOf, setAddingSubTaskOf] = useState<Task | null>(null)
+  const [insertingAfterTaskId, setInsertingAfterTaskId] = useState<string | null>(null)
   const [showTodayLine, setShowTodayLine] = useState<boolean>(true)
   const [showHelpModal, setShowHelpModal] = useState<boolean>(false)
   const [expandedTaskIds, setExpandedTaskIds] = useState<Set<string>>(new Set())
@@ -46,11 +47,10 @@ export default function App() {
   } = useTaskManager()
 
   const scaleConfig = SCALE_CONFIG[scale]
-  const activeDaysPerUnit = scale === 'custom' ? customDays : scaleConfig.daysPerUnit
+  const activeDaysPerUnit = scale === 'custom' ? (customDays ?? 2) : (scaleConfig.daysPerUnit ?? 1)
   const effectiveDayWidth = UNIT_WIDTH / activeDaysPerUnit
   const totalDays = tasks.length > 0 ? getTotalDuration(tasks) : 0
 
-  // 计算新任务默认开始时间：上一个任务的结束时间 + 1天
   const defaultTaskStartDate: string | undefined = React.useMemo(() => {
     if (tasks.length === 0) return undefined
     const sortedByEnd = [...tasks].sort((a, b) =>
@@ -59,7 +59,6 @@ export default function App() {
     return addDays(sortedByEnd[0].endDate, 1)
   }, [tasks])
 
-  // 计算项目起止时间（所有任务的最早开始和最晚结束）
   const projectDateRange = React.useMemo(() => {
     if (tasks.length === 0) return { startDate: '', endDate: '' }
     const sortedByStart = [...tasks].sort((a, b) =>
@@ -73,19 +72,6 @@ export default function App() {
       endDate: sortedByEnd[0]?.endDate || '',
     }
   }, [tasks])
-
-  function getTotalDuration(tasks: { startDate: string; endDate: string }[]): number {
-    if (tasks.length === 0) return 0
-    const sortedByStart = [...tasks].sort((a, b) =>
-      dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf()
-    )
-    const sortedByEnd = [...tasks].sort((a, b) =>
-      dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf()
-    )
-    const minStart = sortedByStart[0].startDate
-    const maxEnd = sortedByEnd[0].endDate
-    return dayjs(maxEnd).diff(dayjs(minStart), 'day') + 1
-  }
 
   const handleScaleChange = useCallback((newScale: TimeScale) => {
     setScale(newScale)
@@ -101,23 +87,33 @@ export default function App() {
 
   const handleAddTaskClick = useCallback(() => {
     setAddingTask(true)
+    setInsertingAfterTaskId(null)
+  }, [])
+
+  const handleInsertTaskClick = useCallback((afterTaskId: string) => {
+    setAddingTask(true)
+    setInsertingAfterTaskId(afterTaskId)
+    setAddingSubTaskOf(null)
   }, [])
 
   const handleAddSubTaskClick = useCallback((parentTask: Task) => {
     setAddingTask(true)
     setAddingSubTaskOf(parentTask)
+    setInsertingAfterTaskId(null)
   }, [])
 
   const handleCloseAddTaskModal = useCallback(() => {
     setAddingTask(false)
     setAddingSubTaskOf(null)
+    setInsertingAfterTaskId(null)
   }, [])
 
   const handleSaveNewTask = useCallback((taskData: Omit<Task, 'id'>) => {
-    addTask(taskData)
+    addTask(taskData, insertingAfterTaskId || undefined)
     setAddingTask(false)
     setAddingSubTaskOf(null)
-  }, [addTask])
+    setInsertingAfterTaskId(null)
+  }, [addTask, insertingAfterTaskId])
 
   const handleEditTask = useCallback((task: Task) => {
     setEditingTask(task)
@@ -127,7 +123,6 @@ export default function App() {
     setEditingTask(null)
   }, [])
 
-  // ── 全局快捷键 ─────────────────────────────────────────────
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       const isInput = e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement
@@ -171,8 +166,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [undo, redo, deleteTask, selectedTaskId])
 
-  // ── 搜索过滤 ───────────────────────────────────────────────
-  // 搜索时自动展开包含匹配项的父任务
   useEffect(() => {
     if (!searchQuery.trim()) return
     const query = searchQuery.trim().toLowerCase()
@@ -200,20 +193,17 @@ export default function App() {
 
   return (
     <div className="h-dvh flex flex-col bg-white">
-      {/* 顶部标题 */}
       <div className="shrink-0 mx-2 mt-2 rounded-xl bg-gradient-to-r from-[#5b8def] via-[#7c6fd6] to-[#9366c9] px-4 py-4 text-center shadow-sm">
         <h1 className="text-lg font-bold text-white tracking-wider">进度计划甘特图绘制工具</h1>
         <p className="text-xs text-white/80 mt-1 tracking-wide">让绘制甘特图变得简单</p>
       </div>
 
-      {/* 保存提示 */}
       {saveToast && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-in fade-in slide-in-from-top-2">
           已自动保存到本地
         </div>
       )}
 
-      {/* 头部 */}
       <ProjectHeader
         projectName={projectName}
         onNameChange={updateProjectName}
@@ -223,6 +213,7 @@ export default function App() {
         toolbar={
           <Toolbar
             onAddTask={handleAddTaskClick}
+            onInsertTask={handleInsertTaskClick}
             onScaleChange={handleScaleChange}
             onCustomDaysChange={setCustomDays}
             customDays={customDays}
@@ -253,7 +244,6 @@ export default function App() {
         }
       />
 
-      {/* 主区域 */}
       <GanttChart exportRef={exportRef}>
         <TaskTable
           tasks={tasks}
@@ -289,7 +279,6 @@ export default function App() {
         />
       </GanttChart>
 
-      {/* 编辑弹窗 */}
       <TaskEditModal
         task={editingTask}
         isOpen={!!editingTask}
@@ -299,7 +288,6 @@ export default function App() {
         allTasks={tasks}
       />
 
-      {/* 添加任务弹窗 */}
       <TaskAddModal
         isOpen={addingTask}
         onClose={handleCloseAddTaskModal}
@@ -307,9 +295,9 @@ export default function App() {
         defaultStartDate={defaultTaskStartDate}
         allTasks={tasks}
         parentId={addingSubTaskOf?.id}
+        insertAfterTaskId={insertingAfterTaskId}
       />
 
-      {/* 帮助弹窗 */}
       <HelpModal
         isOpen={showHelpModal}
         onClose={() => setShowHelpModal(false)}

@@ -53,14 +53,30 @@ export function useTaskManager() {
     })
   }, [setProject, pushHistory])
 
-  const addTask = useCallback((taskData?: Omit<Task, 'id'>) => {
+  const addTask = useCallback((taskData?: Omit<Task, 'id'>, insertAfterId?: string) => {
     if (taskData) {
       const newTask: Task = {
         id: generateId(),
         ...taskData,
       }
       wrappedSetProject(prev => {
-        const tasksWithNew = [...prev.tasks, newTask]
+        let tasksWithNew: Task[]
+        
+        if (insertAfterId) {
+          // 插入任务：找到指定任务的位置，在其后插入
+          const insertIndex = prev.tasks.findIndex(t => t.id === insertAfterId)
+          if (insertIndex >= 0) {
+            tasksWithNew = [...prev.tasks]
+            tasksWithNew.splice(insertIndex + 1, 0, newTask)
+          } else {
+            // 如果找不到指定任务，添加到末尾
+            tasksWithNew = [...prev.tasks, newTask]
+          }
+        } else {
+          // 普通添加：添加到末尾
+          tasksWithNew = [...prev.tasks, newTask]
+        }
+        
         return {
           ...prev,
           tasks: calcParentDates(tasksWithNew),
