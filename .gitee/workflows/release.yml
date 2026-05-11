@@ -1,9 +1,18 @@
-name: 自动发布
+name: Gitee 发布工作流
 
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（如 1.0.13）'
+        required: true
+        default: '1.0.13'
+      release_notes:
+        description: '更新说明'
+        required: false
 
 jobs:
   build:
@@ -19,6 +28,9 @@ jobs:
 
       - name: 安装依赖
         run: npm install
+
+      - name: 更新版本号
+        run: npm version ${{ github.event.inputs.version || '1.0.0' }} --no-git-tag-version
 
       - name: 构建生产版本
         run: npm run build
