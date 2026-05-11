@@ -9,8 +9,8 @@
 
 ## 在线体验地址
 
-[点击这里在线体验](https://dtianchen.github.io/Gantt-Tool/)
-<https://dtianchen.github.io/Gantt-Tool/>
+[点击这里在线体验](https://dtianchen.github.io/gantt-chart-drawing-tool/)
+https://dtianchen.github.io/gantt-chart-drawing-tool/
 
 ## 界面预览
 
