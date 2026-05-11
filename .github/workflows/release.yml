@@ -1,0 +1,49 @@
+name: 手动创建发行版
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号（如 1.0.13）'
+        required: true
+        default: '1.0.13'
+      release_notes:
+        description: '更新说明'
+        required: false
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 更新版本号
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      - name: 构建生产版本
+        run: npm run build
+
+      - name: 打包 Electron 应用
+        run: npm run electron:build
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.release_notes || '自动发布' }}
+          files: |
+            ../gantt-exe/*.exe
+            ../gantt-exe/*.zip
+          draft: false
+          prerelease: false
