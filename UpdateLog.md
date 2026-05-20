@@ -4,6 +4,35 @@
 
 ---
 
+## [1.0.13] - 2026-05-20
+
+### 新增
+
+- **Electron 自定义菜单系统**
+  - 完整的中文/英文菜单切换功能
+  - 支持语言菜单动态切换界面语言（中文/English）
+  - 包含文件、编辑、视图、语言、帮助等标准菜单
+- **图标系统完善**
+  - 新增 `scripts/generate-icon.js` 脚本自动生成 ICO 图标
+  - 配置安装包图标、卸载程序图标、安装界面头部图标
+  - 支持自定义应用图标，修复任务栏和桌面快捷方式图标显示
+
+### 修复
+
+- **EXE 运行空白页面**：`vite.config.ts` 设置 `base: './'` 使用相对路径，修复 Electron `file://` 协议无法解析资源的问题
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `electron/main.cjs` | 添加中英文菜单系统、语言切换功能、窗口图标配置 |
+| `electron/preload.cjs` | 添加语言切换 IPC API |
+| `vite.config.ts` | 设置 `base: './'` 支持 Electron 本地加载 |
+| `package.json` | 完善 NSIS 图标配置（installerIcon/uninstallerIcon/installerHeaderIcon） |
+| `scripts/generate-icon.js` | 新增图标生成脚本，支持从 PNG 生成多尺寸 ICO |
+
+---
+
 ## [1.0.12] - 2026-05-09
 
 ### 新增
