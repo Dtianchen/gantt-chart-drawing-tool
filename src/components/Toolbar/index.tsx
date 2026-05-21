@@ -1,10 +1,11 @@
 import { useRef, useCallback, useState } from 'react'
 import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X, ChevronDown, FileSpreadsheet, Undo2, Redo2, Search, FileJson, Upload } from 'lucide-react'
-import { TimeScale, SCALE_CONFIG } from '../../types'
+import { TimeScale, SCALE_CONFIG, HistorySnapshot } from '../../types'
 import { useGanttExport } from '../../hooks/useGanttExport'
 import { useGanttExcelExport } from '../../hooks/useGanttExcelExport'
 import dayjs from 'dayjs'
 import { Task } from '../../types'
+import HistoryPanel from '../HistoryPanel'
 
 interface TemplateOption {
   id: string
@@ -47,6 +48,9 @@ interface ToolbarProps {
   searchQuery?: string
   onSearchChange?: (query: string) => void
   searchInputRef?: React.RefObject<HTMLInputElement>
+  snapshots?: HistorySnapshot[]
+  onRestoreSnapshot?: (id: string) => void
+  onDeleteSnapshot?: (id: string) => void
 }
 
 export default function Toolbar({
@@ -78,6 +82,9 @@ export default function Toolbar({
   searchQuery = '',
   onSearchChange,
   searchInputRef,
+  snapshots = [],
+  onRestoreSnapshot,
+  onDeleteSnapshot,
 }: ToolbarProps) {
   const { exportGanttAsImage } = useGanttExport()
   const { exportGanttAsExcel } = useGanttExcelExport()
@@ -196,6 +203,15 @@ export default function Toolbar({
           <Redo2 size={16} />
         </button>
       </div>
+
+      <div className="w-px h-6 bg-slate-200 mx-1" />
+
+      {/* 历史记录 */}
+      <HistoryPanel
+        snapshots={snapshots}
+        onRestore={onRestoreSnapshot || (() => {})}
+        onDelete={onDeleteSnapshot || (() => {})}
+      />
 
       <div className="w-px h-6 bg-slate-200 mx-1" />
 

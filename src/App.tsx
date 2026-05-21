@@ -44,6 +44,9 @@ export default function App() {
     canRedo,
     exportProject,
     importProject,
+    snapshots,
+    restoreFromSnapshot,
+    deleteSnapshot,
   } = useTaskManager()
 
   const scaleConfig = SCALE_CONFIG[scale]
@@ -240,6 +243,9 @@ export default function App() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             searchInputRef={searchInputRef}
+            snapshots={snapshots}
+            onRestoreSnapshot={restoreFromSnapshot}
+            onDeleteSnapshot={deleteSnapshot}
           />
         }
       />

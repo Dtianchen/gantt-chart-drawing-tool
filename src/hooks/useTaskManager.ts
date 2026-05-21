@@ -1,9 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
-import { Task, TaskColor, Project, calcParentDates, taskAllChildren } from '../types'
+import { Task, TaskColor, Project, HistorySnapshot, calcParentDates, taskAllChildren } from '../types'
 import { useLocalStorage } from './useLocalStorage'
 import { mockProject } from '../data/mockData'
 import { TEMPLATES } from '../data/templates'
 import { addDays, getDaysBetween } from '../utils/dateUtils'
+
+const MAX_SNAPSHOTS = 100
 
 let taskCounter = 100
 
@@ -16,10 +18,43 @@ const MAX_HISTORY = 50
 export function useTaskManager() {
   const [project, setProject] = useLocalStorage('project', mockProject)
   const [historyVersion, setHistoryVersion] = useState(0)
+  const [snapshots, setSnapshots] = useLocalStorage<HistorySnapshot[]>('history_snapshots', [])
 
   // 撤销/重做历史栈
   const historyRef = useRef<Project[]>([project])
   const historyIndexRef = useRef<number>(0)
+
+  // 添加快照
+  const addSnapshot = useCallback((description: string) => {
+    const snapshot: HistorySnapshot = {
+      id: `snapshot-${Date.now()}`,
+      timestamp: Date.now(),
+      description,
+      project: JSON.parse(JSON.stringify(project)),
+    }
+
+    setSnapshots(prev => {
+      const updated = [...prev, snapshot]
+      if (updated.length > MAX_SNAPSHOTS) {
+        return updated.slice(-MAX_SNAPSHOTS)
+      }
+      return updated
+    })
+  }, [project, setSnapshots])
+
+  // 从快照恢复
+  const restoreFromSnapshot = useCallback((snapshotId: string) => {
+    const snapshot = snapshots.find(s => s.id === snapshotId)
+    if (snapshot) {
+      const next = JSON.parse(JSON.stringify(snapshot.project))
+      wrappedSetProject(next)
+    }
+  }, [snapshots])
+
+  // 删除快照
+  const deleteSnapshot = useCallback((snapshotId: string) => {
+    setSnapshots(prev => prev.filter(s => s.id !== snapshotId))
+  }, [setSnapshots])
 
   const syncVersion = useCallback(() => {
     setHistoryVersion(v => v + 1)
@@ -82,10 +117,12 @@ export function useTaskManager() {
           tasks: calcParentDates(tasksWithNew),
         }
       })
+      addSnapshot(`添加任务: ${taskData.name || '新任务'}`)
     }
-  }, [wrappedSetProject])
+  }, [wrappedSetProject, addSnapshot])
 
   const updateTask = useCallback((id: string, data: Partial<Task>) => {
+    const taskName = project.tasks.find(t => t.id === id)?.name || '任务'
     wrappedSetProject(prev => {
       const tasksAfterUpdate = prev.tasks.map(task =>
         task.id === id
@@ -103,9 +140,12 @@ export function useTaskManager() {
         tasks: calcParentDates(tasksAfterUpdate),
       }
     })
-  }, [wrappedSetProject])
+    addSnapshot(`修改任务: ${taskName}`)
+  }, [wrappedSetProject, project.tasks, addSnapshot])
 
   const deleteTask = useCallback((id: string) => {
+    const taskName = project.tasks.find(t => t.id === id)?.name || '任务'
+    const childCount = taskAllChildren(id, project.tasks).length
     wrappedSetProject(prev => {
       // 收集要删除的 ID（包括子孙）
       const idsToRemove = new Set([id, ...taskAllChildren(id, prev.tasks)])
@@ -120,7 +160,8 @@ export function useTaskManager() {
         tasks: calcParentDates(tasksAfterDelete),
       }
     })
-  }, [wrappedSetProject])
+    addSnapshot(`删除任务: ${taskName}${childCount > 0 ? ` (含${childCount}个子任务)` : ''}`)
+  }, [wrappedSetProject, project.tasks, addSnapshot])
 
   const reorderTasks = useCallback((oldIndex: number, newIndex: number) => {
     wrappedSetProject(prev => {
@@ -132,6 +173,7 @@ export function useTaskManager() {
   }, [wrappedSetProject])
 
   const resizeTask = useCallback((id: string, newStartDate: string, newEndDate: string) => {
+    const taskName = project.tasks.find(t => t.id === id)?.name || '任务'
     wrappedSetProject(prev => {
       const tasksAfterResize = prev.tasks.map(task =>
         task.id === id
@@ -143,11 +185,13 @@ export function useTaskManager() {
         tasks: calcParentDates(tasksAfterResize),
       }
     })
-  }, [wrappedSetProject])
+    addSnapshot(`调整任务日期: ${taskName}`)
+  }, [wrappedSetProject, project.tasks, addSnapshot])
 
   const updateProjectName = useCallback((name: string) => {
     wrappedSetProject(prev => ({ ...prev, name }))
-  }, [wrappedSetProject])
+    addSnapshot(`修改项目名称: ${name}`)
+  }, [wrappedSetProject, addSnapshot])
 
   const resetProject = useCallback(() => {
     window.localStorage.removeItem('gantt_project')
@@ -155,7 +199,8 @@ export function useTaskManager() {
     historyRef.current = [mockProject]
     historyIndexRef.current = 0
     syncVersion()
-  }, [setProject, syncVersion])
+    addSnapshot('重置项目')
+  }, [setProject, syncVersion, addSnapshot])
 
   const loadTemplate = useCallback((templateId: string) => {
     const template = TEMPLATES.find(t => t.id === templateId)
@@ -167,8 +212,9 @@ export function useTaskManager() {
       historyRef.current = [next]
       historyIndexRef.current = 0
       syncVersion()
+      addSnapshot(`加载模板: ${template.name}`)
     }
-  }, [setProject, syncVersion])
+  }, [setProject, syncVersion, addSnapshot])
 
   // ── 撤销 / 重做 ────────────────────────────────────────────
 
@@ -232,11 +278,12 @@ export function useTaskManager() {
         })),
       }
       wrappedSetProject(next)
+      addSnapshot(`导入项目: ${next.name}`)
       return true
     } catch {
       return false
     }
-  }, [wrappedSetProject])
+  }, [wrappedSetProject, addSnapshot])
 
   return {
     projectName: project.name,
@@ -255,5 +302,8 @@ export function useTaskManager() {
     canRedo,
     exportProject,
     importProject,
+    snapshots,
+    restoreFromSnapshot,
+    deleteSnapshot,
   }
 }

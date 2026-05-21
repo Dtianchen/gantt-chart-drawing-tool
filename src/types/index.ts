@@ -28,6 +28,13 @@ export interface Project {
   tasks: Task[]
 }
 
+export interface HistorySnapshot {
+  id: string
+  timestamp: number
+  description: string
+  project: Project
+}
+
 export type TimeScale = 'day' | 'custom'
 
 export const UNIT_WIDTH = 28 // 所有视图的刻度格子统一宽度
