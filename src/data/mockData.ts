@@ -1,8 +1,10 @@
 import { Project, Task } from '../types'
+import dayjs from 'dayjs'
 
 export const DEFAULT_PROJECT_NAME = '软件开发项目'
 
-export const mockTasks: Task[] = [
+// 原始任务数据（使用固定日期）
+const originalMockTasks: Task[] = [
   // ========== 第一阶段：项目启动与需求分析（第1-15天）==========
   {
     id: 'task-1',
@@ -567,6 +569,32 @@ export const mockTasks: Task[] = [
     color: 'purple',
   },
 ]
+
+// 动态调整任务时间：将最早的任务开始时间设置为当前时间的前两天
+function adjustTaskDates(tasks: Task[]): Task[] {
+  if (tasks.length === 0) return tasks
+
+  // 找到最早的任务开始时间
+  const earliestStartDate = tasks.reduce((min, task) => {
+    return dayjs(task.startDate).isBefore(min) ? dayjs(task.startDate) : min
+  }, dayjs(tasks[0].startDate))
+
+  // 目标开始时间：当前时间的前两天
+  const targetStartDate = dayjs().subtract(2, 'day')
+
+  // 计算需要偏移的天数
+  const offsetDays = targetStartDate.diff(earliestStartDate, 'day')
+
+  // 调整所有任务的时间
+  return tasks.map(task => ({
+    ...task,
+    startDate: dayjs(task.startDate).add(offsetDays, 'day').format('YYYY-MM-DD'),
+    endDate: dayjs(task.endDate).add(offsetDays, 'day').format('YYYY-MM-DD'),
+  }))
+}
+
+// 导出调整后的任务数据
+export const mockTasks: Task[] = adjustTaskDates(originalMockTasks)
 
 export const mockProject: Project = {
   name: DEFAULT_PROJECT_NAME,

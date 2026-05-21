@@ -4,6 +4,7 @@ import { useLocalStorage } from './useLocalStorage'
 import { mockProject } from '../data/mockData'
 import { TEMPLATES } from '../data/templates'
 import { addDays, getDaysBetween } from '../utils/dateUtils'
+import dayjs from 'dayjs'
 
 const MAX_SNAPSHOTS = 100
 
@@ -207,12 +208,46 @@ export function useTaskManager() {
     if (template) {
       // 清除旧数据，加载新模板
       window.localStorage.removeItem('gantt_project')
-      const next = { ...template.project }
-      setProject(next)
-      historyRef.current = [next]
-      historyIndexRef.current = 0
-      syncVersion()
-      addSnapshot(`加载模板: ${template.name}`)
+
+      // 计算时间偏移：将模板的开始时间调整为当前时间的前两天
+      const tasks = template.project.tasks
+      if (tasks.length > 0) {
+        // 找到模板中最早的任务开始时间
+        const earliestStartDate = tasks.reduce((min, task) => {
+          return dayjs(task.startDate).isBefore(min) ? dayjs(task.startDate) : min
+        }, dayjs(tasks[0].startDate))
+
+        // 目标开始时间：当前时间的前两天
+        const targetStartDate = dayjs().subtract(2, 'day')
+
+        // 计算需要偏移的天数
+        const offsetDays = targetStartDate.diff(earliestStartDate, 'day')
+
+        // 调整所有任务的时间
+        const adjustedTasks = tasks.map(task => ({
+          ...task,
+          startDate: dayjs(task.startDate).add(offsetDays, 'day').format('YYYY-MM-DD'),
+          endDate: dayjs(task.endDate).add(offsetDays, 'day').format('YYYY-MM-DD'),
+        }))
+
+        const next = {
+          ...template.project,
+          tasks: adjustedTasks,
+        }
+        setProject(next)
+        historyRef.current = [next]
+        historyIndexRef.current = 0
+        syncVersion()
+        addSnapshot(`加载模板: ${template.name}`)
+      } else {
+        // 空模板，直接加载
+        const next = { ...template.project }
+        setProject(next)
+        historyRef.current = [next]
+        historyIndexRef.current = 0
+        syncVersion()
+        addSnapshot(`加载模板: ${template.name}`)
+      }
     }
   }, [setProject, syncVersion, addSnapshot])
 

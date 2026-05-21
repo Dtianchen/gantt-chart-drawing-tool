@@ -196,13 +196,19 @@ export default function App() {
 
   return (
     <div className="h-dvh flex flex-col bg-white">
-      <div className="shrink-0 mx-2 mt-2 rounded-xl bg-gradient-to-r from-[#5b8def] via-[#7c6fd6] to-[#9366c9] px-4 py-4 text-center shadow-sm">
-        <h1 className="text-lg font-bold text-white tracking-wider">进度计划甘特图绘制工具</h1>
-        <p className="text-xs text-white/80 mt-1 tracking-wide">让绘制甘特图变得简单</p>
+      <div className="shrink-0 mx-2 mt-2 rounded-2xl bg-gradient-to-r from-primary-700 via-primary-600 to-primary-500 px-6 py-5 text-center shadow-elegant">
+        <div className="relative">
+          <h1 className="text-xl font-bold text-white tracking-wider">进度计划甘特图绘制工具</h1>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-24 h-0.5 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full"></div>
+        </div>
+        <p className="text-sm text-white/80 mt-2 tracking-wide">让绘制简单甘特图更加直观高效</p>
       </div>
 
       {saveToast && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg text-sm animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] bg-gradient-to-r from-slate-700 to-slate-800 text-white px-5 py-2.5 rounded-xl shadow-elegant text-sm font-medium animate-in fade-in slide-in-from-top-2 flex items-center gap-2">
+          <svg className="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
           已自动保存到本地
         </div>
       )}
