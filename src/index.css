@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', 'PingFang SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
+  --primary-gradient: linear-gradient(135deg, #3742fa 0%, #5b7cf6 50%, #7a95fa 100%);
 }
 
 body {
@@ -22,24 +23,26 @@ body {
   box-sizing: border-box;
 }
 
-/* 自定义滚动条 */
+/* 精致的自定义滚动条 */
 .gantt-scroll::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+  height: 6px;
+  width: 6px;
 }
 .gantt-scroll::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border-radius: 3px;
 }
 .gantt-scroll::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 .gantt-scroll::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 工具提示样式 */
+/* 精致的工具提示样式 */
 .truncate-with-tooltip {
   position: relative;
 }
@@ -47,17 +50,44 @@ body {
 .truncate-with-tooltip:hover::after {
   content: attr(title);
   position: absolute;
-  left: 0;
-  top: 100%;
-  background: #1e293b;
+  left: 50%;
+  top: -8px;
+  transform: translateX(-50%) translateY(-100%);
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 400;
   white-space: nowrap;
   z-index: 1000;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.truncate-with-tooltip:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-100%) translateY(-4px);
+}
+
+.truncate-with-tooltip:hover::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #1e293b;
+  z-index: 1001;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.truncate-with-tooltip:hover::before {
+  opacity: 1;
 }
 
 /* 统一的甘特图行高变量 */
@@ -112,10 +142,24 @@ body {
 
 /* 任务条悬停效果增强 */
 .task-bar-hover-glow {
-  filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.5));
+  filter: drop-shadow(0 4px 12px rgba(99, 102, 241, 0.4));
+  transform: scale(1.02);
 }
 
-/* 甘特图行分隔线扩展样式 */
+/* 任务条基础样式 */
+.task-bar-base {
+  @apply rounded-lg cursor-pointer transition-all duration-300;
+  @apply hover:brightness-105 active:scale-95;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 任务完成进度条 */
+.task-progress {
+  @apply rounded-lg transition-all duration-500 ease-out;
+  background: linear-gradient(90deg, currentColor 0%, rgba(255,255,255,0.3) 100%);
+}
+
+/* 精致的甘特图行分隔线 */
 .gantt-row::after {
   content: '';
   position: absolute;
@@ -123,26 +167,34 @@ body {
   left: 0;
   right: 0;
   height: 1px;
-  background-color: #e2e8f0;
+  background: linear-gradient(90deg, transparent 0%, #e2e8f0 10%, #e2e8f0 90%, transparent 100%);
   z-index: 5;
 }
 
-/* 甘特图表头样式 */
-.gantt-table-header {
-  height: var(--gantt-table-header-height);
-  background-color: #f8fafc;
-  position: relative;
+/* 选中行高亮 */
+.gantt-row.selected {
+  background: linear-gradient(90deg, rgba(91, 124, 246, 0.05) 0%, rgba(91, 124, 246, 0.1) 100%);
 }
 
-/* 表头底部线 */
+/* 精致的甘特图表头样式 */
+.gantt-table-header {
+  height: var(--gantt-table-header-height);
+  background: linear-gradient(180deg, #fafafa 0%, #f1f5f9 100%);
+  position: relative;
+  border-bottom: 2px solid #e2e8f0;
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* 表头底部装饰线 */
 .gantt-table-header::after {
   content: '';
   position: absolute;
-  bottom: 0;
+  bottom: -2px;
   left: 0;
   right: 0;
-  height: 1px;
-  background-color: #e2e8f0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #5b7cf6 20%, #5b7cf6 80%, transparent 100%);
+  opacity: 0.5;
   z-index: 5;
 }
 

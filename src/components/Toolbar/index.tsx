@@ -153,7 +153,7 @@ export default function Toolbar({
     setShowExportMenu(false)
   }, [onImportJSON])
 
-  const btnBase = "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-150 cursor-pointer active:scale-[0.97]"
+  const btnBase = "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.97]"
 
   const selectedTask = tasks.find(t => t.id === selectedTaskId)
 
@@ -219,7 +219,7 @@ export default function Toolbar({
       <div className="relative">
         <button
           onClick={() => setShowAddMenu(prev => !prev)}
-          className={`${btnBase} bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow`}
+          className={`${btnBase} bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-lg shadow-primary-500/25 hover:shadow-xl hover:shadow-primary-500/30`}
         >
         <Plus size={15} />
         添加任务
@@ -284,7 +284,7 @@ export default function Toolbar({
       <div className="relative">
         <button
           onClick={() => setShowExportMenu(prev => !prev)}
-          className={`${btnBase} bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm hover:shadow`}
+          className={`${btnBase} bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30`}
         >
           <Download size={15} />
           导入导出
