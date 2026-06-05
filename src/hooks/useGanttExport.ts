@@ -106,8 +106,6 @@ export function useGanttExport() {
     await new Promise(r => setTimeout(r, 300))
 
     try {
-      console.log('[导出]', { 任务数: safeCount, 宽度: totalW, 高度: totalH })
-
       // ── 8. 截图 ──
       const dataUrl = await toPng(wrapper, {
         backgroundColor: '#ffffff',

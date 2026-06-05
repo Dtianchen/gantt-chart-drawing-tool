@@ -15,6 +15,17 @@ export default defineConfig({
     allowedHosts: true
   },
   build: {
-    outDir: 'dist'
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-lucide': ['lucide-react'],
+          'vendor-xlsx': ['xlsx'],
+          'vendor-html-to-image': ['html-to-image'],
+          'vendor-dnd-kit': ['@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+          'vendor-dayjs': ['dayjs'],
+        },
+      },
+    },
   }
 })

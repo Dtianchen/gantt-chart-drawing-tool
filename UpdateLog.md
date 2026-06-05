@@ -4,7 +4,7 @@
 
 ---
 
-## [1.1.2] - 2026-06-04
+## [1.1.2] - 2026-06-05
 
 ### 新增
 
@@ -24,13 +24,30 @@
 
 - **App.tsx git 合并冲突**：清理代码中的冲突标记
 
+### 优化
+
+- **代码分割优化**
+  - 主 chunk 从 600KB 降至 71KB，减少 88%
+  - 使用 React.lazy 懒加载模态框组件（TaskEditModal、TaskAddModal、HelpModal）
+  - 配置 vite manualChunks 将第三方库拆分为独立 chunks（xlsx、lucide-react、html-to-image、dnd-kit、dayjs）
+  - 首屏加载更快，缓存更友好
+
+- **代码清理**
+  - 移除未使用的调试日志（useGanttExport.ts）
+  - 移除未使用的 CSS 类（index.css）
+  - 移除未使用的 resetProject 函数（useTaskManager.ts）
+
 ### 变更
 
 | 文件 | 说明 |
 |------|------|
-| `src/hooks/useTaskManager.ts` | 模板加载时自动调整任务时间 |
+| `src/hooks/useTaskManager.ts` | 模板加载时自动调整任务时间，移除未使用的 resetProject 函数 |
 | `src/data/mockData.ts` | 默认数据动态调整时间偏移 |
-| `src/App.tsx` | 清理 git 合并冲突 |
+| `src/App.tsx` | 清理 git 合并冲突，使用懒加载组件 |
+| `src/utils/lazyImport.tsx` | 新增懒加载工具函数 |
+| `vite.config.ts` | 添加 manualChunks 配置进行代码分割 |
+| `src/index.css` | 移除未使用的 CSS 类 |
+| `src/hooks/useGanttExport.ts` | 移除调试日志 |
 
 ---
 

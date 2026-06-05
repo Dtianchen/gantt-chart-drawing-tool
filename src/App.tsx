@@ -4,13 +4,11 @@ import ProjectHeader from './components/ProjectHeader'
 import Toolbar from './components/Toolbar'
 import TaskTable from './components/TaskTable'
 import GanttTimeline from './components/GanttTimeline'
-import TaskEditModal from './components/TaskEditModal'
-import TaskAddModal from './components/TaskAddModal'
-import HelpModal from './components/HelpModal'
 import { useTaskManager } from './hooks/useTaskManager'
 import { addDays, getTotalDuration } from './utils/dateUtils'
 import dayjs from 'dayjs'
 import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH } from './types'
+import { LazyTaskEditModal, LazyTaskAddModal, LazyHelpModal } from './utils/lazyImport.tsx'
 
 export default function App() {
   const exportRef = useRef<HTMLDivElement | null>(null)
@@ -65,10 +63,10 @@ export default function App() {
   const projectDateRange = React.useMemo(() => {
     if (tasks.length === 0) return { startDate: '', endDate: '' }
     const sortedByStart = [...tasks].sort((a, b) =>
-      dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf()
+      dayjs(a.startDate).valueOf() - dayjs(a.startDate).valueOf()
     )
     const sortedByEnd = [...tasks].sort((a, b) =>
-      dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf()
+      dayjs(b.endDate).valueOf() - dayjs(b.endDate).valueOf()
     )
     return {
       startDate: sortedByStart[0]?.startDate || '',
@@ -291,7 +289,7 @@ export default function App() {
         />
       </GanttChart>
 
-      <TaskEditModal
+      <LazyTaskEditModal
         task={editingTask}
         isOpen={!!editingTask}
         onClose={handleCloseModal}
@@ -300,7 +298,7 @@ export default function App() {
         allTasks={tasks}
       />
 
-      <TaskAddModal
+      <LazyTaskAddModal
         isOpen={addingTask}
         onClose={handleCloseAddTaskModal}
         onSave={handleSaveNewTask}
@@ -310,7 +308,7 @@ export default function App() {
         insertAfterTaskId={insertingAfterTaskId}
       />
 
-      <HelpModal
+      <LazyHelpModal
         isOpen={showHelpModal}
         onClose={() => setShowHelpModal(false)}
       />

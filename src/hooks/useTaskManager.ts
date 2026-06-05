@@ -194,15 +194,6 @@ export function useTaskManager() {
     addSnapshot(`修改项目名称: ${name}`)
   }, [wrappedSetProject, addSnapshot])
 
-  const resetProject = useCallback(() => {
-    window.localStorage.removeItem('gantt_project')
-    setProject(mockProject)
-    historyRef.current = [mockProject]
-    historyIndexRef.current = 0
-    syncVersion()
-    addSnapshot('重置项目')
-  }, [setProject, syncVersion, addSnapshot])
-
   const loadTemplate = useCallback((templateId: string) => {
     const template = TEMPLATES.find(t => t.id === templateId)
     if (template) {
@@ -329,7 +320,6 @@ export function useTaskManager() {
     reorderTasks,
     resizeTask,
     updateProjectName,
-    resetProject,
     loadTemplate,
     undo,
     redo,
