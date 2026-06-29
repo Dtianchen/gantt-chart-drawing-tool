@@ -242,7 +242,8 @@ npm run electron:build
 │   │   └── index.ts              # Task/Project/TimeScale 类型 + SCALE_CONFIG/TASK_COLORS 常量
 │   ├── utils/                    # 工具函数库
 │   │   ├── dateUtils.ts          # 日期计算、格式化、时间单元生成等
-│   │   └── taskUtils.ts          # 任务编号计算、日期计算等工具函数
+│   │   ├── taskUtils.ts          # 任务编号计算、日期计算等工具函数
+│   │   └── lazyImport.tsx        # React.lazy 懒加载工具函数（代码分割优化）
 │   ├── App.tsx                   # 主应用组件
 │   ├── main.tsx                  # React 入口
 │   └── index.css                 # 全局样式（TailwindCSS + CSS 变量）
