@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const path = require('path')
+const pkg = require('../package.json')
 
 let mainWindow
 let currentLanguage = 'zh' // 默认中文
@@ -150,13 +151,17 @@ function setLanguage(lang) {
 }
 
 function createWindow() {
+  const iconPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'icon.ico')
+    : path.join(__dirname, '..', 'build', 'icon.ico')
+  
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Gantt Tool v1.0.5',
-    icon: path.join(__dirname, '..', 'build', 'icon.ico'),
+    title: `Gantt Tool v${pkg.version}`,
+    icon: iconPath,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

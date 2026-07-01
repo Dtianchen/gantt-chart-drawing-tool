@@ -123,6 +123,8 @@ export function useGanttExport() {
 
     } catch (error) {
       console.error('导出失败:', error)
+      const errorMsg = error instanceof Error ? error.message : '未知错误'
+      window.alert(`导出失败：${errorMsg}\n\n请尝试缩小视图范围后重试。`)
     } finally {
       if (wrapper.parentNode === document.body) {
         document.body.removeChild(wrapper)

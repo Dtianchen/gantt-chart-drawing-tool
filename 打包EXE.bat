@@ -60,32 +60,14 @@ timeout /t 2 /nobreak >nul
 :: Clean old gantt-build-* temp dirs
 for /d %%d in (..\gantt-build-*) do rd /s /q "%%d" >nul 2>&1
 
-:: Build to temp English path
-call npx electron-builder --win --config.directories.output="%TEMP_BUILD_DIR%" --config.win.forceCodeSigning=false --config.win.signAndEditExecutable=false
+:: Build directly to dist-exe
+if exist "dist-exe\win-unpacked" rd /s /q "dist-exe\win-unpacked" >nul 2>&1
+if not exist "dist-exe" mkdir "dist-exe"
+
+call npx electron-builder --win --config.directories.output="dist-exe" --config.win.forceCodeSigning=false --config.win.signAndEditExecutable=false
 
 if !errorlevel! equ 0 (
-    echo.
-    echo [INFO] Moving files to dist-exe\...
-
-    :: Prepare destination
-    if exist "dist-exe\win-unpacked" rd /s /q "dist-exe\win-unpacked" >nul 2>&1
-    if not exist "dist-exe" mkdir "dist-exe"
-
-    :: Use robocopy with retry for locked files
-    robocopy "%TEMP_BUILD_DIR%" "dist-exe" *.exe *.blockmap *.yaml *.yml win-unpacked /E /MOVE /R:5 /W:2000 >nul
-    set RC_ERR=!errorlevel!
-
-    if !RC_ERR! leq 7 (
-        goto :BUILD_OK
-    ) else (
-        :: Fallback: try xcopy
-        echo         robocopy failed, trying xcopy...
-        xcopy "%TEMP_BUILD_DIR%\*.exe" "dist-exe\" /Y >nul 2>&1
-        xcopy "%TEMP_BUILD_DIR%\*.blockmap" "dist-exe\" /Y >nul 2>&1
-        xcopy "%TEMP_BUILD_DIR%\*.yaml" "dist-exe\" /Y >nul 2>&1
-        xcopy "%TEMP_BUILD_DIR%\win-unpacked" "dist-exe\win-unpacked\" /E /Y /I >nul 2>&1
-        goto :BUILD_OK
-    )
+    goto :BUILD_OK
 ) else (
     echo.
     echo [WARNING] Build failed. Temp dir kept at: %TEMP_BUILD_DIR%
