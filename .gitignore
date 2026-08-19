@@ -23,6 +23,7 @@ gen-icon.cjs
 build-log*.txt
 
 # Editor directories and files
+.codebuddy/
 .vscode/*
 !.vscode/extensions.json
 .idea/

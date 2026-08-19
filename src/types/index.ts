@@ -1,3 +1,5 @@
+import { getDaysBetween } from '../utils/dateUtils'
+
 export type TaskColor = 'red' | 'blue' | 'green' | 'orange' | 'purple'
 
 export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'overdue'
@@ -126,17 +128,17 @@ export function calcParentDates(tasks: Task[]): Task[] {
     const children = childrenMap.get(parentId)
     if (!children || children.length === 0) continue
 
-    const childDates = children.map(c => new Date(c.startDate).getTime())
-    const childEndDates = children.map(c => new Date(c.endDate).getTime())
-    const minStart = new Date(Math.min(...childDates)).toISOString().split('T')[0]
-    const maxEnd = new Date(Math.max(...childEndDates)).toISOString().split('T')[0]
-    
+    // 使用 YYYY-MM-DD 字符串字典序比较（与 parseDate 一致，避免时区偏移）
+    const minStart = children.reduce((a, b) => (a.startDate < b.startDate ? a : b)).startDate
+    const maxEnd = children.reduce((a, b) => (a.endDate > b.endDate ? a : b)).endDate
+
     const parent = taskMap.get(parentId)
     if (parent) {
-      // 只有当日期发生变化时才更新
-      if (parent.startDate !== minStart || parent.endDate !== maxEnd) {
-        taskMap.set(parentId, { ...parent, startDate: minStart, endDate: maxEnd })
-        
+      const newDuration = getDaysBetween(minStart, maxEnd)
+      // 只有当日期或工期发生变化时才更新
+      if (parent.startDate !== minStart || parent.endDate !== maxEnd || parent.duration !== newDuration) {
+        taskMap.set(parentId, { ...parent, startDate: minStart, endDate: maxEnd, duration: newDuration })
+
         // 如果父任务还有上层父任务，加入队列继续更新
         if (parent.parentId && !updateQueue.includes(parent.parentId)) {
           updateQueue.push(parent.parentId)

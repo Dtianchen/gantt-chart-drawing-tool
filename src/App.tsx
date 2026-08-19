@@ -63,10 +63,10 @@ export default function App() {
   const projectDateRange = React.useMemo(() => {
     if (tasks.length === 0) return { startDate: '', endDate: '' }
     const sortedByStart = [...tasks].sort((a, b) =>
-      dayjs(a.startDate).valueOf() - dayjs(a.startDate).valueOf()
+      dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf()
     )
     const sortedByEnd = [...tasks].sort((a, b) =>
-      dayjs(b.endDate).valueOf() - dayjs(b.endDate).valueOf()
+      dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf()
     )
     return {
       startDate: sortedByStart[0]?.startDate || '',
