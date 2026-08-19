@@ -524,7 +524,7 @@ export default function Toolbar({
       {confirmTemplate && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={handleCancelConfirm}>
           {/* 遮罩 */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/30" />
 
           {/* 弹窗内容 */}
           <div

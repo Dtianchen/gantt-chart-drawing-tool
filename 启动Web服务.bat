@@ -9,7 +9,7 @@ echo   Gantt Tool - Web Service (Nginx)
 echo ==========================================
 echo.
 
-::: [1] Build if needed
+:: [1] Build if needed
 if not exist "dist\index.html" (
     echo [1/3] Building production version...
     call npm run build
@@ -22,20 +22,24 @@ if not exist "dist\index.html" (
     echo [1/3] Build output exists [OK]
 )
 
-::: [2] Stop existing Nginx
+:: [2] Stop existing Nginx
 echo.
 echo [2/3] Stopping any existing Nginx...
 taskkill /F /IM nginx.exe >nul 2>&1
 timeout /t 1 /nobreak >nul
 
-::: [3] Start Nginx
+:: Create required runtime directories (pid/error.log & temp dirs)
+if not exist "nginx\logs" mkdir "nginx\logs"
+if not exist "nginx\temp" mkdir "nginx\temp"
+
+:: [3] Start Nginx
 echo [3/3] Starting Nginx...
 cd nginx
 start "" nginx.exe
 timeout /t 1 /nobreak >nul
 cd ..
 
-::: Check if running
+:: Check if running
 tasklist /FI "IMAGENAME eq nginx.exe" 2>nul | find /I "nginx.exe" >nul
 if %errorlevel% equ 0 (
     echo.
@@ -58,6 +62,6 @@ if %errorlevel% equ 0 (
     exit /b 1
 )
 
-::: Keep window open (user closes to stop reference)
+:: Keep window open (user closes to stop reference)
 echo Press Ctrl+C or close this window to exit.
 pause

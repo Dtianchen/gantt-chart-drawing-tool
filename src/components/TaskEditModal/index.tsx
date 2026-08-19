@@ -140,7 +140,7 @@ export default function TaskEditModal({ task, isOpen, onClose, onSave, onDelete,
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
       {/* 遮罩 */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/40" />
 
       {/* 弹窗 */}
       <div

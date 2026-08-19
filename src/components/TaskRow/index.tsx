@@ -54,7 +54,7 @@ export default function TaskRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
+      className={`grid grid-cols-[40px_var(--name-col)_64px_80px_80px] items-center gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
         index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
       } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''} border-b border-slate-200 ${
         isSelected ? 'bg-blue-100/70' : ''
@@ -74,39 +74,35 @@ export default function TaskRow({
         <span className="font-mono">{taskNumber}</span>
       </div>
 
-      <div className="flex-1 px-2 min-w-0 border-r border-slate-200 task-cell" style={{ paddingLeft: depth * 16 + 8 }}>
-        <div className="flex items-center h-full">
-          {/* 展开/收起图标 */}
-          {hasChildren ? (
-            <button
-              onClick={e => { e.stopPropagation(); onToggle?.(task.id) }}
-              className="mr-1 p-0.5 hover:bg-slate-200 rounded transition-colors cursor-pointer text-slate-500"
-            >
-              {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-          ) : (
-            <span className="w-5 mr-1" />
-          )}
-
-          <span
-            title={task.name}
-            className={`${hasChildren ? 'font-bold' : 'font-medium'} text-black flex-1 min-w-0 max-w-full task-name-cell chinese-text text-xs`}
-          >
-            {task.name}
-          </span>
-
-          {/* 添加子任务按钮（hover 显示） */}
+      <div className="flex items-center px-2 border-r border-slate-200 task-cell relative whitespace-nowrap overflow-hidden">
+        {/* 展开/收起图标（仅父任务显示，不占位，无缩进） */}
+        {hasChildren && (
           <button
-            onClick={e => { e.stopPropagation(); onAddSubTask?.(task) }}
-            className="p-1 opacity-0 group-hover:opacity-100 hover:bg-emerald-100 rounded transition-all cursor-pointer text-emerald-600 ml-1"
-            title="添加子任务"
+            onClick={e => { e.stopPropagation(); onToggle?.(task.id) }}
+            className="mr-1 p-0.5 hover:bg-slate-200 rounded transition-colors cursor-pointer text-slate-500 shrink-0"
           >
-            <Plus size={12} />
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
           </button>
-        </div>
+        )}
+
+        <span
+          title={task.name}
+          className={`${hasChildren ? 'font-bold' : 'font-medium'} text-black task-name-cell chinese-text text-xs truncate`}
+        >
+          {task.name}
+        </span>
+
+        {/* 添加子任务按钮（hover 显示，绝对定位不占宽度） */}
+        <button
+          onClick={e => { e.stopPropagation(); onAddSubTask?.(task) }}
+          className="absolute right-1 top-1/2 -translate-y-1/2 p-1 opacity-0 group-hover:opacity-100 hover:bg-emerald-100 rounded transition-all cursor-pointer text-emerald-600"
+          title="添加子任务"
+        >
+          <Plus size={12} />
+        </button>
       </div>
 
-      <div className={`w-20 flex items-center justify-center text-black shrink-0 border-r border-slate-200 task-cell text-xs gap-1`}>
+      <div className={`w-16 flex items-center justify-center text-black shrink-0 border-r border-slate-200 task-cell text-xs gap-1`}>
         {task.isMilestone ? (
           <span className="text-amber-600 font-medium">里程碑</span>
         ) : (

@@ -24,7 +24,7 @@ export default function HistoryPanel({ snapshots, onRestore, onDelete }: History
 
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={() => setIsOpen(false)}>
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/30" />
           
           <div 
             className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 max-h-[80vh] flex flex-col"

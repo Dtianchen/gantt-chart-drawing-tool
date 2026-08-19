@@ -4,6 +4,48 @@
 
 ---
 
+## [1.1.3] - 2026-08-19
+
+### 新增
+
+- **工作名称列宽度手动调整**
+  - 表头「工作名称」列右侧新增拖拽手柄，按住可左右拖动调整列宽（最小 80px）
+  - 调整后的宽度自动保存到 `localStorage`（键 `gantt_name_col_width`），刷新页面后保持
+  - 未手动调整过时，名称列按所有任务名最大宽度自动计算（CSS 变量 `--name-col` 统一控制，保证表头与各行对齐）
+
+### 优化
+
+- **左侧信息栏布局改为自适应**
+  - 不再使用固定总宽（原 480px），改为 `grid-cols-[auto_1fr]`：左侧由内容决定宽度，右侧甘特图占满剩余空间
+  - 列宽配置：编号 40px、工作名称（按内容自适应）、持续时间 64px、开始/结束时间各 80px
+  - 表头与各行使用同一 grid 列模板，整列严格对齐
+- **弹窗背景不再模糊**
+  - 移除所有弹窗遮罩层的 `backdrop-blur-sm`（编辑任务、新增任务、活动菜单确认、历史面板、帮助），仅保留半透明黑色背景，背后页面保持清晰
+- **添加子任务图标不占宽度**
+  - 任务行 hover 出现的「+ 添加子任务」按钮改为绝对定位悬浮，不再挤压名称列空间
+- **移除层级首行缩进**
+  - 子任务名称不再按层级 `depth` 缩进，名称列完整占满可用宽度；层级关系仅靠展开图标与加粗区分
+
+### 说明
+
+- 行高保持 `--gantt-row-height: 30px` 单行显示；窄列时名称单行省略（鼠标悬停显示完整名称），未启用换行以避免左右甘特图错位
+
+### 变更
+
+| 文件 | 说明 |
+|------|------|
+| `src/components/GanttChart/index.tsx` | 左栏布局 `grid-cols-[480px_auto]` → `grid-cols-[auto_1fr]` |
+| `src/components/TaskTable/index.tsx` | 注入 `--name-col` 变量；用隐藏 span 测量任务名最大宽度；新增列宽拖拽手柄与 `localStorage` 持久化 |
+| `src/components/TaskRow/index.tsx` | 行布局改为 grid 列模板；名称列 `truncate` 单行；添加子任务按钮绝对定位；移除层级缩进占位 |
+| `src/components/TaskEditModal/index.tsx` | 移除遮罩 `backdrop-blur-sm` |
+| `src/components/TaskAddModal/index.tsx` | 移除遮罩 `backdrop-blur-sm` |
+| `src/components/Toolbar/index.tsx` | 移除确认弹窗遮罩 `backdrop-blur-sm` |
+| `src/components/HistoryPanel/index.tsx` | 移除遮罩 `backdrop-blur-sm` |
+| `src/components/HelpModal/index.tsx` | 移除遮罩 `backdrop-blur-sm` |
+| `src/hooks/useGanttExport.ts` | 导出图片左栏宽度改为动态读取实际宽度（不再硬编码），行高同步 30px |
+
+---
+
 ## [1.1.2] - 2026-06-05
 
 ### 新增

@@ -106,11 +106,11 @@ body {
   line-height: 1.2;
 }
 
-/* 针对汉字优化的换行设置 */
+/* 针对汉字优化的换行设置（填满整行后再换行，不在中途强制断词） */
 .task-name-cell.chinese-text {
   word-wrap: break-word;
-  word-break: break-all;
-  overflow-wrap: anywhere;
+  word-break: normal;
+  overflow-wrap: break-word;
   hyphens: manual;
   line-height: 1.2;
 }

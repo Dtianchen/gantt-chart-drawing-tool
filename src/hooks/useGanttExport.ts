@@ -58,6 +58,14 @@ export function useGanttExport() {
       if (w > 0) actualWidth = w
     }
 
+    // ── 3.1 获取左侧栏实际宽度（由名称列内容自适应决定）──
+    const leftPanel = element.firstElementChild as HTMLElement | null
+    let leftWidth = 480
+    if (leftPanel) {
+      const lw = leftPanel.getBoundingClientRect().width
+      if (lw > 0) leftWidth = Math.round(lw)
+    }
+
     // ── 4. 构建头部信息行 ──
     const headerHeight = headerInfo && headerInfo.startDate ? 40 : 0
     const headerRowEl = headerHeight > 0 ? (() => {
@@ -81,7 +89,7 @@ export function useGanttExport() {
     const TIME_HEADER_H = 50
     const safeCount = Math.max(taskCount, 1)
     const totalH = headerHeight + TIME_HEADER_H + (safeCount * ROW_H) + 20
-    const totalW = Math.max(actualWidth + 540 + 80, element.scrollWidth + 100)
+    const totalW = Math.max(actualWidth + leftWidth + 80, element.scrollWidth + 100)
 
     // ── 6. 包装容器（固定精确尺寸）──
     const wrapper = document.createElement('div')
@@ -96,7 +104,7 @@ export function useGanttExport() {
 
     // 克隆根：保持 grid 布局，只设 overflow visible
     clone.style.cssText = `
-      display:grid;grid-template-columns:540px ${actualWidth}px;
+      display:grid;grid-template-columns:${leftWidth}px ${actualWidth}px;
       overflow:visible;width:100%;height:auto;flex:none;
     `
     wrapper.appendChild(clone)
