@@ -21,6 +21,7 @@ nginx/temp/
 # Temp scripts
 gen-icon.cjs
 build-log*.txt
+build_log*.txt
 
 # Editor directories and files
 .codebuddy/
