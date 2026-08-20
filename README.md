@@ -26,7 +26,7 @@ https://dtianchen.github.io/gantt-chart-drawing-tool/
 - **右侧时间轴区域**：三行表头结构 — 第一行年月分组跨列合并 / 第二行日期+星期 / 第三行工程标尺（0/5/10...刻度数字）
 - **甘特图条**：可视化展示各任务的工期范围和进度百分比（不同颜色区分任务）
 - **周末高亮**：浅红色背景标识周六/日列
-- **今日线**：蓝色竖线标记当前日期位置
+
 
 ***
 
@@ -170,12 +170,15 @@ npm run build
 ```bash
 # 方式A：命令行
 npm run electron:build
+# 产物默认输出到仓库上一级目录的 gantt-exe/（见 package.json 的 directories.output）
 
-# 方式B：双击脚本
+# 方式B：双击脚本（推荐，脚本已将输出目录强制改为 dist-exe/）
 "打包EXE.bat"
 ```
 
-产物位于 `dist-exe/` 目录：
+> 注意：命令行方式输出目录为 `../gantt-exe/`，而「打包EXE.bat」脚本通过 `--config.directories.output="dist-exe"` 将输出目录覆盖为 `dist-exe/`。
+
+一键脚本产物位于 `dist-exe/` 目录：
 
 | 文件                           | 类型           | 说明              |
 | ---------------------------- | ------------ | --------------- |
@@ -210,7 +213,7 @@ npm run electron:build
 | 日期处理  | dayjs                       | latest |
 | 图片导出  | html-to-image               | latest |
 | 图标库   | lucide-react                | latest |
-| 桌面打包  | Electron + electron-builder | latest |
+| 桌面打包  | Electron + electron-builder | 33.x / 25.x |
 
 ***
 
@@ -218,8 +221,8 @@ npm run electron:build
 
 ```
 进度工具/
-├── src/                          # 源代码（21个文件）
-│   ├── components/               # React 组件（11个）
+├── src/                          # 源代码（26个文件）
+│   ├── components/               # React 组件（12个）
 │   │   ├── GanttChart/           # 甘特图主容器
 │   │   ├── GanttTimeline/        # 时间轴 + 任务条区域
 │   │   ├── TaskTable/            # 左侧任务列表表格
@@ -230,7 +233,8 @@ npm run electron:build
 │   │   ├── Toolbar/              # 工具栏（添加/导出/视图/今日线/模板/帮助）
 │   │   ├── TaskAddModal/         # 添加任务弹窗
 │   │   ├── TaskEditModal/        # 编辑任务弹窗
-│   │   └── HelpModal/            # 帮助面板（快捷键、使用说明）
+│   │   ├── HelpModal/            # 帮助面板（快捷键、使用说明）
+│   │   └── HistoryPanel/         # 历史记录快照面板（版本 1.1.1 新增）
 │   ├── hooks/                    # 自定义 Hooks（5个）
 │   │   ├── useTaskManager.ts     # 任务管理（CRUD/模板加载/localStorage）
 │   │   ├── useGanttExport.ts     # 甘特图导出为PNG图片
@@ -258,7 +262,7 @@ npm run electron:build
 ├── nginx/                         # 内置便携版 Nginx
 │   ├── nginx.exe                 # Nginx 可执行文件
 │   └── conf/nginx.conf           # 预配置（端口 8080 → dist/）
-├── output/                       # Electron 打包输出目录（electron-builder）
+├── dist-exe/                     # Electron 打包输出目录（一键脚本「打包EXE.bat」输出至此；命令行 npm run electron:build 默认输出到 ../gantt-exe）
 ├── public/
 │   └── favicon.svg                # 网页图标
 ├── screenshot-main.png            # 主界面截图（用于 README 预览）
