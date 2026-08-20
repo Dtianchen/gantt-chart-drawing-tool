@@ -23,7 +23,7 @@ echo.
 
 :: Ensure Defender exclusion is set
 echo [1/4] Checking Windows Defender exclusion...
-powershell -NoProfile -Command "$e='F:\Study\CodeBuddy'; if($e -notin (Get-MpPreference).ExclusionPath){ Add-MpPreference -ExclusionPath $e }; 'OK'" >nul 2>&1
+powershell -NoProfile -Command "$p='%~dp0'.TrimEnd('\'); if($p -notin (Get-MpPreference).ExclusionPath){ Add-MpPreference -ExclusionPath $p }; 'OK'" >nul 2>&1
 echo         Done.
 
 :: Check node_modules
@@ -64,7 +64,7 @@ for /d %%d in (..\gantt-build-*) do rd /s /q "%%d" >nul 2>&1
 if exist "dist-exe\win-unpacked" rd /s /q "dist-exe\win-unpacked" >nul 2>&1
 if not exist "dist-exe" mkdir "dist-exe"
 
-call npx electron-builder --win --config.directories.output="dist-exe" --config.win.forceCodeSigning=false --config.win.signAndEditExecutable=false
+call npx electron-builder --win --config.directories.output="dist-exe"
 
 if !errorlevel! equ 0 (
     goto :BUILD_OK

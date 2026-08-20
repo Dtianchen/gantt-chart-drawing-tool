@@ -1,6 +1,6 @@
 {
     "name": "gantt-chart-tool",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "description": "进度工具 - 甘特图应用",
     "main": "electron/main.cjs",
     "author": "Dtianchen <sfgtfqssy@gmail.com>",
@@ -31,7 +31,6 @@
             }
         ],
         "icon": "build/icon.ico",
-        "afterPack": "./scripts/afterPack.cjs",
         "win": {
             "target": [
                 "nsis",
@@ -39,7 +38,8 @@
             ],
             "icon": "build/icon.ico",
             "forceCodeSigning": false,
-            "signAndEditExecutable": false
+            "signAndEditExecutable": false,
+            "verifyUpdateCodeSignature": false
         },
         "publish": null,
         "nsis": {
