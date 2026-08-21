@@ -136,18 +136,18 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
       {/* 遮罩 */}
       <div className="absolute inset-0 bg-black/40" />
 
       {/* 弹窗 */}
       <div
-        className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+        className="relative bg-white rounded-xl shadow-2xl w-full max-w-md mx-auto max-h-full overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200 flex flex-col"
         onClick={e => e.stopPropagation()}
         onKeyDown={handleKeyDown}
       >
         {/* 标题栏 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50 shrink-0">
           <h3 className="text-base font-semibold text-slate-800">添加新任务</h3>
           <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer">
             <X size={18} className="text-slate-500" />
@@ -155,7 +155,7 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
         </div>
 
         {/* 表单内容 */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto min-h-0 overscroll-contain">
           {/* 工作名称 */}
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-slate-600">
@@ -325,7 +325,7 @@ export default function TaskAddModal({ isOpen, onClose, onSave, defaultStartDate
         </div>
 
         {/* 底部按钮 */}
-        <div className="flex items-center justify-end px-6 py-4 bg-slate-50/80 border-t border-slate-200 gap-3">
+        <div className="flex items-center justify-end px-6 py-4 bg-slate-50/80 border-t border-slate-200 gap-3 shrink-0">
           <button
             onClick={onClose}
             className="px-4 py-2 text-sm text-slate-600 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"

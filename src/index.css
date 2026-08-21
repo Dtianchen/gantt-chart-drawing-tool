@@ -42,6 +42,15 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* 隐藏滚动条（视觉上仅甘特图右侧保留一条滚动条） */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* 精致的工具提示样式 */
 .truncate-with-tooltip {
   position: relative;

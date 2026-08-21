@@ -39,7 +39,7 @@ export function useGanttExcelExport() {
       { v: '里程碑', t: 's' },
       { v: '开始日期', t: 's' },
       { v: '结束日期', t: 's' },
-      { v: '工期(天)', t: 's' },
+      { v: '持续时间(天)', t: 's' },
       { v: '颜色', t: 's' },
       { v: '前置任务', t: 's' },
     ]

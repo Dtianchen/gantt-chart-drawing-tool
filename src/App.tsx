@@ -6,6 +6,7 @@ import TaskTable from './components/TaskTable'
 import GanttTimeline from './components/GanttTimeline'
 import { useTaskManager } from './hooks/useTaskManager'
 import { addDays, getTotalDuration } from './utils/dateUtils'
+import { getVisibleTasks } from './utils/taskUtils'
 import dayjs from 'dayjs'
 import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH } from './types'
 import { LazyTaskEditModal, LazyTaskAddModal, LazyHelpModal } from './utils/lazyImport.tsx'
@@ -25,6 +26,7 @@ export default function App() {
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [saveToast, setSaveToast] = useState<boolean>(false)
+  const [exporting, setExporting] = useState<boolean>(false)
 
   const {
     projectName,
@@ -73,6 +75,12 @@ export default function App() {
       endDate: sortedByEnd[0]?.endDate || '',
     }
   }, [tasks])
+
+  // 统一计算可见行数，确保左侧任务列表与右侧甘特图的滚动范围完全一致
+  const rowCount = React.useMemo(
+    () => getVisibleTasks(tasks, expandedTaskIds, searchQuery).length,
+    [tasks, expandedTaskIds, searchQuery]
+  )
 
   const handleScaleChange = useCallback((newScale: TimeScale) => {
     setScale(newScale)
@@ -193,7 +201,7 @@ export default function App() {
   }, [importProject])
 
   return (
-    <div className="h-dvh flex flex-col bg-white">
+    <div className="h-dvh flex flex-col bg-white overflow-hidden">
       <div className="shrink-0 mx-2 mt-2 rounded-2xl bg-gradient-to-r from-primary-700 via-primary-600 to-primary-500 px-6 py-5 text-center shadow-elegant">
         <div className="relative">
           <h1 className="text-xl font-bold text-white tracking-wider">进度计划甘特图绘制工具</h1>
@@ -250,11 +258,22 @@ export default function App() {
             snapshots={snapshots}
             onRestoreSnapshot={restoreFromSnapshot}
             onDeleteSnapshot={deleteSnapshot}
+            onExportStateChange={setExporting}
           />
         }
       />
 
-      <GanttChart exportRef={exportRef}>
+      <GanttChart
+        exportRef={exportRef}
+        tasks={tasks}
+        scale={scale}
+        customDays={customDays}
+        dayWidth={effectiveDayWidth}
+        showTodayLine={showTodayLine}
+        expandedIds={expandedTaskIds}
+        searchQuery={searchQuery}
+        exporting={exporting}
+      >
         <TaskTable
           tasks={tasks}
           scale={scale}
@@ -286,8 +305,14 @@ export default function App() {
           onResizeTask={resizeTask}
           onEditTask={handleEditTask}
           searchQuery={searchQuery}
+          rowCount={rowCount}
         />
       </GanttChart>
+
+      {/* 底部版权栏：始终显示在页面底部中间 */}
+      <footer className="shrink-0 py-1.5 text-center text-xs text-slate-400 bg-white border-t border-slate-100 select-none">
+        Copyright ©2026 Dtianchen 版权所有
+      </footer>
 
       <LazyTaskEditModal
         task={editingTask}

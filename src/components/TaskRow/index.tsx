@@ -54,9 +54,9 @@ export default function TaskRow({
     <div
       ref={setNodeRef}
       style={style}
-      className={`grid grid-cols-[40px_var(--name-col)_64px_80px_80px] items-center gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
+      className={`grid grid-cols-[40px_var(--name-col)_64px_80px_80px] items-center h-[30px] min-h-0 overflow-hidden gantt-row group cursor-pointer hover:bg-blue-50/60 transition-colors ${
         index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'
-      } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''} border-b border-slate-200 ${
+      } ${isDragging ? 'opacity-80 shadow-lg rounded-sm bg-primary-50' : ''} shadow-[inset_0_-1px_0_0_#e2e8f0] ${
         isSelected ? 'bg-blue-100/70' : ''
       }`}
       onDoubleClick={() => onEdit?.(task)}

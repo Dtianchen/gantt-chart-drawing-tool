@@ -51,6 +51,7 @@ interface ToolbarProps {
   snapshots?: HistorySnapshot[]
   onRestoreSnapshot?: (id: string) => void
   onDeleteSnapshot?: (id: string) => void
+  onExportStateChange?: (exporting: boolean) => void
 }
 
 export default function Toolbar({
@@ -85,6 +86,7 @@ export default function Toolbar({
   snapshots = [],
   onRestoreSnapshot,
   onDeleteSnapshot,
+  onExportStateChange,
 }: ToolbarProps) {
   const { exportGanttAsImage } = useGanttExport()
   const { exportGanttAsExcel } = useGanttExcelExport()
@@ -101,14 +103,27 @@ export default function Toolbar({
       const timestamp = dayjs().format('YYYYMMDD_HHmmss')
       const name = projectName.trim() || '项目'
       const filename = `${name}_${timestamp}_进度计划甘特图.png`
-      await exportGanttAsImage(exportRef.current, filename, {
-        projectName,
-        startDate: projectStartDate,
-        endDate: projectEndDate,
-        totalDays,
-      }, taskCount)
+      await exportGanttAsImage(
+        exportRef.current,
+        filename,
+        {
+          projectName,
+          startDate: projectStartDate,
+          endDate: projectEndDate,
+          totalDays,
+        },
+        taskCount,
+        // 导出前挂载离屏副本，导出后卸载，平时零开销
+        () => {
+          onExportStateChange?.(true)
+          return new Promise<void>((res) => {
+            requestAnimationFrame(() => requestAnimationFrame(() => res()))
+          })
+        },
+        () => onExportStateChange?.(false)
+      )
     }
-  }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays])
+  }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays, onExportStateChange, taskCount])
 
   const handleExportExcel = useCallback(() => {
     const timestamp = dayjs().format('YYYYMMDD_HHmmss')

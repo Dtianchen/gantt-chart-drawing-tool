@@ -8,26 +8,6 @@ interface HeaderInfo {
   totalDays: number
 }
 
-/**
- * 精准清除溢出裁剪限制（仅处理 overflow/max-height），保留所有布局属性
- */
-function removeOverflowClipping(root: HTMLElement): void {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT)
-  const els: HTMLElement[] = []
-  let node: Node | null
-  while ((node = walker.nextNode())) {
-    els.push(node as HTMLElement)
-  }
-  for (const el of els) {
-    // 只移除溢出裁剪，保留 height/flex/grid 等布局属性不变
-    el.style.setProperty('overflow', 'visible', 'important')
-    el.style.setProperty('max-height', 'none', 'important')
-    el.style.setProperty('max-width', 'none', 'important')
-    el.style.setProperty('clip', 'auto', 'important')
-    el.style.setProperty('clip-path', 'none', 'important')
-  }
-}
-
 function esc(str: string): string {
   const d = document.createElement('div')
   d.textContent = str
@@ -39,104 +19,130 @@ export function useGanttExport() {
     element: HTMLElement | null,
     filename: string = 'gantt-chart.png',
     headerInfo?: HeaderInfo | null,
-    taskCount: number = 0
+    taskCount: number = 0,
+    beforeExport?: () => void | Promise<void>,
+    afterExport?: () => void
   ): Promise<void> => {
     if (!element) return
 
-    // ── 1. 深度克隆 ──
-    const clone = element.cloneNode(true) as HTMLElement
+    // 触发离屏副本挂载（GanttChart 仅在 exporting=true 时渲染），等待其完成布局
+    await beforeExport?.()
 
-    // ── 2. 仅移除溢出裁剪（保留布局结构完整）──
-    removeOverflowClipping(clone)
-
-    // ── 3. 获取时间轴宽度 ──
-    const origContent = element.querySelector('.gantt-timeline-content') as HTMLElement
-    let actualWidth = 6000
-    if (origContent) {
-      const cs = getComputedStyle(origContent)
-      const w = parseInt(cs.width, 10) || parseInt(origContent.style.width, 10)
-      if (w > 0) actualWidth = w
+    // 把离屏副本临时移入视口内（fixed + left:0/top:0），并置于底层 z-index:-1。
+    // 浏览器会渲染它，因此 html-to-image 能截到真实像素；但它位于真实 UI 之后，
+    // 配合全屏遮罩，用户看不到这个过渡画面。
+    const saved = {
+      position: element.style.position,
+      left: element.style.left,
+      top: element.style.top,
+      zIndex: element.style.zIndex,
     }
+    element.style.position = 'fixed'
+    element.style.left = '0px'
+    element.style.top = '0px'
+    element.style.zIndex = '-1'
 
-    // ── 3.1 获取左侧栏实际宽度（由名称列内容自适应决定）──
-    const leftPanel = element.firstElementChild as HTMLElement | null
-    let leftWidth = 480
-    if (leftPanel) {
-      const lw = leftPanel.getBoundingClientRect().width
-      if (lw > 0) leftWidth = Math.round(lw)
-    }
-
-    // ── 4. 构建头部信息行 ──
+    const ROW_H = 30
+    const TIME_HEADER_H = 50
+    const safeCount = Math.max(taskCount, 1)
     const headerHeight = headerInfo && headerInfo.startDate ? 40 : 0
-    const headerRowEl = headerHeight > 0 ? (() => {
-      const row = document.createElement('div')
-      row.style.cssText = `
+    const totalH = TIME_HEADER_H + (safeCount * ROW_H) + headerHeight + 150
+
+    let headerRowEl: HTMLDivElement | null = null
+    if (headerHeight > 0) {
+      headerRowEl = document.createElement('div')
+      headerRowEl.style.cssText = `
         width:100%;height:${headerHeight}px;display:flex;align-items:center;
         gap:8px;padding:0 34px;border-bottom:1px solid #e5e7eb;
         font-size:12px;flex-shrink:0;background:#fff;
       `
-      row.innerHTML = `
+      headerRowEl.innerHTML = `
         <span style="font-weight:600;color:#1f2937;white-space:nowrap">${esc(headerInfo!.projectName)}</span>
         <span style="color:#6b7280;white-space:nowrap">开始时间：<span style="color:#374151">${esc(headerInfo!.startDate)}</span></span>
         <span style="color:#6b7280;white-space:nowrap">结束时间：<span style="color:#374151">${esc(headerInfo!.endDate)}</span></span>
         <span style="color:#4b5563;white-space:nowrap">计划工期：<span style="color:#d97706;font-weight:600;margin-left:2px">${headerInfo!.totalDays}</span>天</span>
       `
-      return row
-    })() : null
+      element.prepend(headerRowEl)
+    }
 
-    // ── 5. 计算容器尺寸（基于任务数 + 时间轴宽度）──
-    const ROW_H = 30
-    const TIME_HEADER_H = 50
-    const safeCount = Math.max(taskCount, 1)
-    const totalH = headerHeight + TIME_HEADER_H + (safeCount * ROW_H) + 20
-    const totalW = Math.max(actualWidth + leftWidth + 80, element.scrollWidth + 100)
-
-    // ── 6. 包装容器（固定精确尺寸）──
-    const wrapper = document.createElement('div')
-    wrapper.style.cssText = `
-      position:fixed;top:0;left:0;z-index:999999;
-      background:#fff;display:flex;flex-direction:column;
-      width:${totalW}px;height:${totalH}px;
-      overflow:hidden;
+    // 全屏遮罩：遮住移入视口的副本，视觉风格与项目页面（蓝紫渐变 + 圆角卡片）保持一致
+    const overlay = document.createElement('div')
+    overlay.style.cssText = `
+      position:fixed;inset:0;z-index:2147483646;
+      background:rgba(248,250,252,.82);
+      backdrop-filter:blur(2px);
+      display:flex;align-items:center;justify-content:center;
+      pointer-events:auto;
     `
-
-    if (headerRowEl) wrapper.appendChild(headerRowEl)
-
-    // 克隆根：保持 grid 布局，只设 overflow visible
-    clone.style.cssText = `
-      display:grid;grid-template-columns:${leftWidth}px ${actualWidth}px;
-      overflow:visible;width:100%;height:auto;flex:none;
+    const spinner = document.createElement('div')
+    spinner.style.cssText = `
+      background:linear-gradient(135deg,#3742fa,#4361ee 50%,#5b7cf6);
+      color:#fff;
+      padding:22px 34px;border-radius:16px;
+      font-size:14px;font-weight:600;letter-spacing:.02em;
+      display:flex;align-items:center;gap:14px;
+      box-shadow:0 10px 40px rgba(55,66,250,.3);
     `
-    wrapper.appendChild(clone)
-    document.body.appendChild(wrapper)
+    spinner.innerHTML = `
+      <style>@keyframes ganttExportSpin{to{transform:rotate(360deg)}}</style>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="animation:ganttExportSpin 1s linear infinite">
+        <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,.35)" stroke-width="4"/>
+        <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+      正在生成图片，请稍候…
+    `
+    overlay.appendChild(spinner)
+    document.body.appendChild(overlay)
 
-    // ── 7. 等待渲染 ──
-    await new Promise(r => setTimeout(r, 300))
+    // 等待浏览器完成离屏副本布局
+    await new Promise<void>((r) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => r()))
+    })
+
+    const rect = element.getBoundingClientRect()
+    const totalW = Math.max(1, Math.round(rect.width))
+    const exportH = Math.max(1, Math.round(totalH))
 
     try {
-      // ── 8. 截图 ──
-      const dataUrl = await toPng(wrapper, {
+      const dataUrl = await toPng(element, {
         backgroundColor: '#ffffff',
         pixelRatio: 2,
         cacheBust: true,
         width: totalW,
-        height: totalH,
+        height: exportH,
+        style: {
+          transform: 'none',
+          margin: '0',
+          boxShadow: 'none',
+        },
+        filter: (node) => {
+          const el = node as HTMLElement
+          // 跳过阴影装饰节点，减少绘制成本
+          if (el && el.style && el.style.boxShadow && el.style.boxShadow.includes('2px')) return false
+          return true
+        },
       })
 
-      // ── 9. 下载 ──
       const link = document.createElement('a')
       link.download = filename
       link.href = dataUrl
       link.click()
-
     } catch (error) {
       console.error('导出失败:', error)
       const errorMsg = error instanceof Error ? error.message : '未知错误'
       window.alert(`导出失败：${errorMsg}\n\n请尝试缩小视图范围后重试。`)
     } finally {
-      if (wrapper.parentNode === document.body) {
-        document.body.removeChild(wrapper)
+      if (overlay.parentNode) overlay.parentNode.removeChild(overlay)
+      if (headerRowEl && element.contains(headerRowEl)) {
+        element.removeChild(headerRowEl)
       }
+      // 移回离屏
+      element.style.position = saved.position
+      element.style.left = saved.left
+      element.style.top = saved.top
+      element.style.zIndex = saved.zIndex
+      // 卸载离屏副本，恢复平时零开销
+      afterExport?.()
     }
   }, [])
 
