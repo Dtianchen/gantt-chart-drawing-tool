@@ -56,7 +56,15 @@ export default function GanttChart({
   const activeDaysPerUnit = scale === 'custom' ? customDays : 1
 
   const baseRange = (() => {
-    if (tasks.length === 0) return { startDate: '2026-04-01', endDate: '2026-05-30' }
+    if (tasks.length === 0) {
+      // 空白模板：时间轴从当前时间的前两天开始，默认跨度 30 天
+      const start = dayjs().subtract(2, 'day')
+      const end = start.add(30, 'day')
+      return {
+        startDate: start.format('YYYY-MM-DD'),
+        endDate: end.format('YYYY-MM-DD'),
+      }
+    }
     const sortedByStart = [...tasks].sort((a, b) => dayjs(a.startDate).valueOf() - dayjs(b.startDate).valueOf())
     const sortedByEnd = [...tasks].sort((a, b) => dayjs(b.endDate).valueOf() - dayjs(a.endDate).valueOf())
     const startDate = dayjs(sortedByStart[0].startDate).subtract(1, 'day')
