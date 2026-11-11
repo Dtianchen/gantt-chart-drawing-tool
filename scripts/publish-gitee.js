@@ -6,7 +6,7 @@ async function createGiteeRelease() {
   const token = process.env.GITEE_TOKEN
   const owner = 'Dtianchen'
   const repo = 'gantt-chart-drawing-tool'
-  const version = process.argv[2] || '1.0.0'
+  const version = process.argv[2] || '1.1.5'
   const releaseNotes = process.argv[3] || '自动发布'
 
   if (!token) {

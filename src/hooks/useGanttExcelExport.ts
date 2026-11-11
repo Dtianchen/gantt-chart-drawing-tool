@@ -1,12 +1,18 @@
 import * as XLSX from 'xlsx'
 import { useCallback } from 'react'
-import { Task, TASK_COLOR_MAP, calcTaskNumber } from '../types'
+import { Task, TASK_COLOR_MAP, calcTaskNumber, DisplayMode } from '../types'
+import { formatProjectDay } from '../utils/dateUtils'
 
 interface HeaderInfo {
   projectName: string
   startDate: string
   endDate: string
   totalDays: number
+}
+
+interface ExportOptions {
+  displayMode?: DisplayMode
+  projectStartDate?: string
 }
 
 const COLOR_LABELS: Record<string, string> = {
@@ -21,8 +27,12 @@ export function useGanttExcelExport() {
   const exportGanttAsExcel = useCallback((
     tasks: Task[],
     headerInfo: HeaderInfo,
-    filename: string = 'project-plan.xlsx'
+    filename: string = 'project-plan.xlsx',
+    options: ExportOptions = {}
   ) => {
+    const projectStartDate = options.projectStartDate ?? ''
+    const isProjectDay = options.displayMode === 'project-day' && !!projectStartDate
+
     // ── 1. 项目信息区（前4行）──────────────────────────────
     const infoRows = [
       [`项目名称：${headerInfo.projectName}`, '', '', '', '', ''],
@@ -76,8 +86,8 @@ export function useGanttExcelExport() {
         { v: taskNum, t: 's' },
         { v: task.name, t: 's' },
         { v: isMilestone ? '是' : '', t: 's' },
-        { v: task.startDate, t: 's' },
-        { v: isMilestone ? '-' : task.endDate, t: 's' },
+        { v: isProjectDay ? formatProjectDay(task.startDate, projectStartDate) : task.startDate, t: 's' },
+        { v: isMilestone ? '-' : (isProjectDay ? formatProjectDay(task.endDate, projectStartDate) : task.endDate), t: 's' },
         { v: isMilestone ? 0 : task.duration, t: 'n' },
         { v: colorLabel, t: 's', color: colorHex },
         { v: predNames, t: 's' },

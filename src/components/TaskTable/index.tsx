@@ -14,12 +14,14 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import TaskRow from '../TaskRow'
-import { Task, TimeScale } from '../../types'
+import { Task, TimeScale, DisplayMode } from '../../types'
 import { getVisibleTasks } from '../../utils/taskUtils'
 
 interface TaskTableProps {
   tasks: Task[]
   scale: TimeScale
+  displayMode?: DisplayMode
+  projectStartDate?: string
   onDelete: (id: string) => void
   onReorder: (oldIndex: number, newIndex: number) => void
   onEditTask?: (task: Task) => void
@@ -42,6 +44,8 @@ interface TaskTableProps {
 export default function TaskTable({
   tasks,
   scale,
+  displayMode = 'date',
+  projectStartDate = '',
   onDelete,
   onReorder,
   onEditTask,
@@ -153,6 +157,8 @@ export default function TaskTable({
                 task={task}
                 index={index}
                 scale={scale}
+                displayMode={displayMode}
+                projectStartDate={projectStartDate}
                 onEdit={onEditTask}
                 depth={depth}
                 isExpanded={expandedIds.has(task.id)}

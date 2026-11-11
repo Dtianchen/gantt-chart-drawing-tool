@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { TimeScale, UNIT_WIDTH } from '../../types'
+import { TimeScale, UNIT_WIDTH, DisplayMode } from '../../types'
 import { getWeekDay, generateDateUnits } from '../../utils/dateUtils'
 
 interface TimeScaleHeaderProps {
@@ -8,21 +8,73 @@ interface TimeScaleHeaderProps {
   scale: TimeScale
   dayWidth?: number
   customDays?: number
+  displayMode?: DisplayMode
+  projectStartDate?: string
 }
 
-export default function TimeScaleHeader({ startDate, endDate, scale, customDays = 2 }: TimeScaleHeaderProps) {
+export default function TimeScaleHeader({
+  startDate,
+  endDate,
+  scale,
+  customDays = 2,
+  displayMode = 'date',
+  projectStartDate = '',
+}: TimeScaleHeaderProps) {
+  const isProjectDay = displayMode === 'project-day' && !!projectStartDate
+
   if (scale === 'day') {
-    return <DayViewHeader startDate={startDate} endDate={endDate} cellWidth={UNIT_WIDTH} />
+    return (
+      <DayViewHeader
+        startDate={startDate}
+        endDate={endDate}
+        cellWidth={UNIT_WIDTH}
+        isProjectDay={isProjectDay}
+        projectStartDate={projectStartDate}
+      />
+    )
   }
 
   // custom → 单元模式，每格固定显示28px
-  return <CustomViewHeader startDate={startDate} endDate={endDate} cellWidth={UNIT_WIDTH} customDays={customDays} />
+  return (
+    <CustomViewHeader
+      startDate={startDate}
+      endDate={endDate}
+      cellWidth={UNIT_WIDTH}
+      customDays={customDays}
+      isProjectDay={isProjectDay}
+      projectStartDate={projectStartDate}
+    />
+  )
 }
 
-/** 日视图表头（三行：月份 | 日期+星期 | 工程标尺） */
-function DayViewHeader({ startDate, endDate, cellWidth }: { startDate: string; endDate: string; cellWidth: number }) {
+/** 预解析一次项目基准日，返回项目天数数字（自然日、1-based 含首尾；基准日前返回 0） */
+function createProjectDayFormatter(projectStartDate: string, enabled: boolean) {
+  const base = enabled && projectStartDate ? dayjs(projectStartDate) : null
+  return (date: string): number => {
+    if (!base || !base.isValid()) return 0
+    const target = dayjs(date)
+    if (!target.isValid()) return 0
+    return Math.max(0, target.diff(base, 'day') + 1)
+  }
+}
+
+/** 日视图表头（三行：月份 | 日期+星期或项目天数 | 工程标尺） */
+function DayViewHeader({
+  startDate,
+  endDate,
+  cellWidth,
+  isProjectDay,
+  projectStartDate,
+}: {
+  startDate: string
+  endDate: string
+  cellWidth: number
+  isProjectDay: boolean
+  projectStartDate: string
+}) {
   const start = dayjs(startDate)
   const end = dayjs(endDate)
+  const projectDayOf = createProjectDayFormatter(projectStartDate, isProjectDay)
 
   const dates: string[] = []
   let current = start
@@ -43,29 +95,37 @@ function DayViewHeader({ startDate, endDate, cellWidth }: { startDate: string; e
 
   return (
     <div className="shrink-0 bg-slate-50 border-b border-slate-200">
-      {/* 第一行：月份分组 */}
+      {/* 第一行：月份分组（项目天数模式整行留白，仅保留行高与分隔线） */}
       <div className="flex h-[14px] border-b border-slate-200">
-        {months.map(month => (
+        {!isProjectDay && months.map(month => (
           <div key={month.label} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: month.width }}>
             <span className="font-semibold text-slate-700 text-xs">{month.label}</span>
           </div>
         ))}
       </div>
-      {/* 第二行：日期+星期 */}
+      {/* 第二行：日期+星期 / 项目天数 */}
       <div className="flex h-[16px] border-b border-slate-200 relative">
         {dates.map((date, i) => {
           const d = dayjs(date)
           const isWeekend = d.day() === 0 || d.day() === 6
+          const projectDay = isProjectDay ? projectDayOf(date) : 0
+          const isPreStart = isProjectDay && projectDay < 1
           return (
             <div
               key={i}
               className={`shrink-0 flex flex-col items-center justify-end border-r border-slate-200 last:border-r-0 ${isWeekend ? 'bg-red-100/40' : ''}`}
               style={{ width: cellWidth, height: '100%' }}
             >
-              <div className="flex flex-col items-center">
-                <span className={`text-[10px] leading-none ${isWeekend ? 'text-red-500' : 'text-slate-700'}`}>{d.date()}</span>
-                <span className={`text-[9px] leading-none ${isWeekend ? 'text-red-400' : 'text-slate-500'}`}>{getWeekDay(date)}</span>
-              </div>
+              {isProjectDay ? (
+                <span className={`text-[10px] leading-none ${isPreStart ? 'text-slate-400' : isWeekend ? 'text-red-500' : 'text-slate-700'}`}>
+                  {projectDay}
+                </span>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span className={`text-[10px] leading-none ${isWeekend ? 'text-red-500' : 'text-slate-700'}`}>{d.date()}</span>
+                  <span className={`text-[9px] leading-none ${isWeekend ? 'text-red-400' : 'text-slate-500'}`}>{getWeekDay(date)}</span>
+                </div>
+              )}
             </div>
           )
         })}
@@ -77,13 +137,17 @@ function DayViewHeader({ startDate, endDate, cellWidth }: { startDate: string; e
       </div>
       {/* 第三行：工程标尺（每5天显示刻度数字） */}
       <div className="flex h-[20px] relative">
-        {dates.map((_, i) => {
-          // 每5天显示一次天数数字（第0天=0, 第5天=5, 第10天=10...）
+        {dates.map((date, i) => {
+          // 日期模式沿用轴起点计数；天数模式按项目基准日重算，基准日前显示数字 0
           const showRuler = i % 5 === 0
+          const projectDay = isProjectDay ? projectDayOf(date) : 0
+          const isPreStart = isProjectDay && projectDay < 1
           return (
             <div key={i} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: cellWidth }}>
               {showRuler && (
-                <span className="text-[11px] font-semibold text-blue-500">{i}</span>
+                <span className={`text-[11px] font-semibold ${isPreStart ? 'text-slate-400' : 'text-blue-500'}`}>
+                  {isProjectDay ? projectDay : i}
+                </span>
               )}
             </div>
           )
@@ -106,14 +170,19 @@ function CustomViewHeader({
   endDate,
   cellWidth,
   customDays,
+  isProjectDay,
+  projectStartDate,
 }: {
   startDate: string
   endDate: string
   cellWidth: number
   customDays?: number
+  isProjectDay: boolean
+  projectStartDate: string
 }) {
   const daysPerUnit = customDays ?? 2
   const units = generateDateUnits(startDate, endDate, daysPerUnit)
+  const projectDayOf = createProjectDayFormatter(projectStartDate, isProjectDay)
   
   // 每个单元的宽度固定为 UNIT_WIDTH(28px)，与视图无关
   const unitWidth = UNIT_WIDTH
@@ -138,29 +207,38 @@ function CustomViewHeader({
 
   return (
     <div className="shrink-0 bg-slate-50 border-b border-slate-200">
-      {/* 第一行：年月 */}
+      {/* 第一行：年月（项目天数模式整行留白，仅保留行高与分隔线） */}
       <div className="flex h-[14px] border-b border-slate-200">
-        {yearMonthGroups.map(g => (
+        {!isProjectDay && yearMonthGroups.map(g => (
           <div key={g.label} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: g.width }}>
             <span className="font-semibold text-slate-700 text-xs">{g.label}</span>
           </div>
         ))}
       </div>
 
-      {/* 第二行：每格的末尾日期+星期 */}
+      {/* 第二行：每格的末尾日期+星期 / 项目天数 */}
       <div className="flex h-[16px] border-b border-slate-200 relative">
         {units.map((unit, i) => {
           const endDate = dayjs(unit.endDate)
+          const isWeekend = endDate.day() === 0 || endDate.day() === 6
+          const projectDay = isProjectDay ? projectDayOf(unit.endDate) : 0
+          const isPreStart = isProjectDay && projectDay < 1
           return (
             <div
               key={i}
-              className={`shrink-0 flex flex-col items-center justify-end border-r border-slate-200 last:border-r-0 ${endDate.day() === 0 || endDate.day() === 6 ? 'bg-red-100/40' : ''}`}
+              className={`shrink-0 flex flex-col items-center justify-end border-r border-slate-200 last:border-r-0 ${isWeekend ? 'bg-red-100/40' : ''}`}
               style={{ width: unitWidth, height: '100%' }}
             >
-              <div className="flex flex-col items-center">
-                <span className={`text-[10px] leading-none ${endDate.day() === 0 || endDate.day() === 6 ? 'text-red-500' : 'text-slate-700'}`}>{endDate.date()}</span>
-                <span className={`text-[9px] leading-none ${endDate.day() === 0 || endDate.day() === 6 ? 'text-red-400' : 'text-slate-500'}`}>{getWeekDay(unit.endDate)}</span>
-              </div>
+              {isProjectDay ? (
+                <span className={`text-[10px] leading-none ${isPreStart ? 'text-slate-400' : isWeekend ? 'text-red-500' : 'text-slate-700'}`}>
+                  {projectDay}
+                </span>
+              ) : (
+                <div className="flex flex-col items-center">
+                  <span className={`text-[10px] leading-none ${isWeekend ? 'text-red-500' : 'text-slate-700'}`}>{endDate.date()}</span>
+                  <span className={`text-[9px] leading-none ${isWeekend ? 'text-red-400' : 'text-slate-500'}`}>{getWeekDay(unit.endDate)}</span>
+                </div>
+              )}
             </div>
           )
         })}
@@ -174,14 +252,18 @@ function CustomViewHeader({
 
       {/* 第三行：工程标尺（每5天显示刻度数字） */}
       <div className="flex h-[20px] relative">
-        {units.map((_, i) => {
+        {units.map((unit, i) => {
           const dayNum = cumulativeDays[i]
-          // 每5天显示一次刻度数字
+          // 每5天显示一次刻度数字；天数模式按项目基准日重算
           const showRuler = dayNum % 5 === 0 || i === 0
+          const projectDay = isProjectDay ? projectDayOf(unit.endDate) : 0
+          const isPreStart = isProjectDay && projectDay < 1
           return (
             <div key={i} className="shrink-0 flex items-center justify-center border-r border-slate-200 last:border-r-0" style={{ width: unitWidth }}>
               {showRuler && (
-                <span className="text-[11px] font-semibold text-blue-500">{dayNum}</span>
+                <span className={`text-[11px] font-semibold ${isPreStart ? 'text-slate-400' : 'text-blue-500'}`}>
+                  {isProjectDay ? projectDay : dayNum}
+                </span>
               )}
             </div>
           )

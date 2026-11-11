@@ -2,13 +2,15 @@ import React from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, ChevronRight, ChevronDown, Plus } from 'lucide-react'
-import { Task, TimeScale, calcTaskNumber, taskHasChildren } from '../../types'
-import { formatFullDate } from '../../utils/dateUtils'
+import { Task, TimeScale, calcTaskNumber, taskHasChildren, DisplayMode } from '../../types'
+import { formatFullDate, formatProjectDay } from '../../utils/dateUtils'
 
 interface TaskRowProps {
   task: Task
   index: number
   scale: TimeScale
+  displayMode?: DisplayMode
+  projectStartDate?: string
   onEdit?: (task: Task) => void
   depth?: number
   isExpanded?: boolean
@@ -23,6 +25,8 @@ export default function TaskRow({
   task,
   index,
   scale,
+  displayMode = 'date',
+  projectStartDate = '',
   onEdit,
   depth = 0,
   isExpanded = false,
@@ -32,6 +36,7 @@ export default function TaskRow({
   onAddSubTask,
   allTasks = [],
 }: TaskRowProps) {
+  const isProjectDay = displayMode === 'project-day' && !!projectStartDate
   const {
     attributes,
     listeners,
@@ -116,12 +121,14 @@ export default function TaskRow({
       </div>
 
       <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 border-r border-slate-200 task-cell text-xs`}>
-        {formatFullDate(task.startDate)}
+        {isProjectDay ? formatProjectDay(task.startDate, projectStartDate) : formatFullDate(task.startDate)}
       </div>
 
       <div className={`w-20 flex items-center justify-center text-black font-mono shrink-0 font-mono border-r border-slate-200 task-cell text-xs`}>
         {task.isMilestone ? (
           <span className="text-slate-400">—</span>
+        ) : isProjectDay ? (
+          formatProjectDay(task.endDate, projectStartDate)
         ) : (
           formatFullDate(task.endDate)
         )}

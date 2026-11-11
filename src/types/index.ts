@@ -39,6 +39,9 @@ export interface HistorySnapshot {
 
 export type TimeScale = 'day' | 'custom'
 
+/** 显示模式：真实日期 / 相对项目开始日的天数 */
+export type DisplayMode = 'date' | 'project-day'
+
 export const UNIT_WIDTH = 28 // 所有视图的刻度格子统一宽度
 
 export interface ScaleConfig {

@@ -117,3 +117,35 @@ export function getTotalDuration(tasks: { startDate: string; endDate: string }[]
   )[0].endDate
   return dayjs(latestEnd).diff(dayjs(minStart), 'day') + 1
 }
+
+/**
+ * 项目第 1 天的基准日：全部任务中最早的开始日期。
+ * YYYY-MM-DD 字典序即可比较，与 calcParentDates 保持一致；空项目返回空字符串。
+ */
+export function getProjectStartDate(tasks: { startDate: string }[]): string {
+  if (tasks.length === 0) return ''
+  let earliest = ''
+  for (const task of tasks) {
+    if (!task.startDate) continue
+    if (!earliest || task.startDate < earliest) earliest = task.startDate
+  }
+  return earliest
+}
+
+/**
+ * 相对项目基准日的项目天数：基准日当天为第 1 天，按自然日、含首尾计数。
+ * 基准日前返回 0 或负数；缺少基准日、日期为空或非法时安全返回 0。
+ */
+export function getProjectDay(date: string, projectStartDate: string): number {
+  if (!date || !projectStartDate) return 0
+  const start = dayjs(projectStartDate)
+  const target = dayjs(date)
+  if (!start.isValid() || !target.isValid()) return 0
+  return target.diff(start, 'day') + 1
+}
+
+/** 项目天数显示文本：第 1 天起显示「第N天」，基准日之前显示「准备期」 */
+export function formatProjectDay(date: string, projectStartDate: string): string {
+  const day = getProjectDay(date, projectStartDate)
+  return day >= 1 ? `第${day}天` : '准备期'
+}

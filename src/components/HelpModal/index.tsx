@@ -63,7 +63,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               项目简介
             </h3>
             <p className="leading-relaxed pl-3.5 text-slate-600">
-              进度计划甘特图绘制工具是一款轻量级的项目进度管理工具，支持可视化甘特图展示、任务拖拽排序与时间调整、视图缩放切换、高清图片导出等功能。界面简洁直观，适合快速规划和管理各类项目进度。
+              进度计划甘特图绘制工具是一款轻量级的项目进度管理工具，支持可视化甘特图展示、任务拖拽排序与时间调整、视图缩放切换、高清图片导出等功能。界面简洁直观，适合快速规划和管理各类项目进度。支持「真实日期」与「项目天数」两种显示模式，可按日历日期或项目相对天数查看计划。
             </p>
           </section>
 
@@ -83,8 +83,9 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 { icon: GripVertical, color: 'text-green-600', bg: 'bg-green-50', title: '拖拽排序', desc: '按住左侧任务行的拖拽图标（⋮⋮）上下移动，调整任务显示顺序' },
                 { icon: Move, color: 'text-violet-600', bg: 'bg-violet-50', title: '整体移动', desc: '按住任务条中间区域左右拖动，可整体平移任务起止时间，持续时间保持不变' },
                 { icon: Calendar, color: 'text-rose-500', bg: 'bg-rose-50', title: '今日标记线', desc: '红色竖线标注当天位置；日期超出时间轴范围时贴边显示并标注「范围外」，可显示/隐藏' },
-                { icon: ZoomIn, color: 'text-purple-600', bg: 'bg-purple-50', title: '视图切换', desc: '日视图逐天显示（详细），自定义视图可设置每格代表天数（默认2天每格），一键切换' },
-                { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导入 / 导出', desc: '导出 PNG 图片、XLSX 表格（含「持续时间(天)」列）或 JSON 数据备份；JSON 文件名自动带时间戳，重复导出不覆盖；支持从 JSON 恢复完整项目数据（含任务层级、颜色、进度）' },
+                { icon: ZoomIn, color: 'text-purple-600', bg: 'bg-purple-50', title: '视图切换', desc: '日视图逐天显示（详细），自定义视图可设置每格代表天数（默认2天每格），一键切换；与「切换模式」（真实日期/项目天数）是两个独立控件' },
+                { icon: RefreshCw, color: 'text-teal-600', bg: 'bg-teal-50', title: '切换模式', desc: '工具栏「切换模式」下拉可在「真实日期 / 项目天数」间切换；项目天数以最早任务开始日为第 1 天，按自然日含首尾计数，仅改变显示，不改动任务数据与日期录入' },
+                { icon: Download, color: 'text-emerald-600', bg: 'bg-emerald-50', title: '导入 / 导出', desc: '导出 PNG 图片、XLSX 表格（含「持续时间(天)」列）或 JSON 数据备份；JSON 文件名自动带时间戳，重复导出不覆盖；支持从 JSON 恢复完整项目数据（含任务层级、颜色、进度）；导出内容跟随当前显示模式，项目天数模式下 PNG 顶部不再显示真实起止日期' },
                 { icon: Undo2, color: 'text-indigo-600', bg: 'bg-indigo-50', title: '撤销 / 重做', desc: '工具栏撤销/重做按钮或使用快捷键 Ctrl+Z / Ctrl+Shift+Z，最多保留 50 步操作历史' },
                 { icon: Search, color: 'text-sky-600', bg: 'bg-sky-50', title: '搜索过滤', desc: '工具栏搜索框输入任务名称实时过滤，自动展开匹配项的父任务路径，左右区域同步显示结果' },
               ].map((item) => (
@@ -99,6 +100,32 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 </li>
               ))}
             </ul>
+          </section>
+
+          {/* 显示模式 */}
+          <section>
+            <h3 className="font-semibold text-slate-800 mb-2.5 flex items-center gap-2">
+              <span className="w-1.5 h-4 bg-teal-500 rounded-full" />
+              显示模式
+            </h3>
+            <div className="pl-3.5 space-y-2 text-xs">
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="shrink-0 w-20 font-medium text-slate-700">真实日期</span>
+                <span className="text-slate-600">默认模式：时间轴与任务表按日历日期显示，年月、起止日期与既有导出结果保持不变</span>
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="shrink-0 w-20 font-medium text-slate-700">项目天数</span>
+                <span className="text-slate-600">以全部任务中最早开始日为第 1 天，按自然日含首尾计数；任务表起止列显示「第 X 天」，时间刻度第二行与工程标尺只显示数字，第一行年月留白，项目头部与 PNG 顶部不再显示真实起止日期</span>
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="shrink-0 w-20 font-medium text-slate-700">数据不变</span>
+                <span className="text-slate-600">切换仅影响显示：任务仍按 YYYY-MM-DD 存储，新增/编辑仍用日期选择器，JSON 备份、模板、撤销重做、拖拽与依赖线均不受影响；基准日随任务增删自动重算，空项目自动回退真实日期模式</span>
+              </div>
+              <div className="flex items-start gap-2 p-2 rounded-lg bg-slate-50 border border-slate-100">
+                <span className="shrink-0 w-20 font-medium text-slate-700">导出</span>
+                <span className="text-slate-600">PNG 与 Excel 的任务内容跟随当前模式；列标题保持原有名称，Excel 信息区仍保留真实起止日期以便追溯</span>
+              </div>
+            </div>
           </section>
 
           {/* 任务条操作说明 */}
@@ -140,6 +167,7 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
                 { step: '7', text: '微调时间安排：通过任务条的边缘拖拽或整体拖拽调整日期' },
                 { step: '8', text: '导出打印：点击「导入导出」按钮选择导出图片（PNG）或表格（XLSX）' },
                 { step: '9', text: '设置前置任务：双击任务打开编辑弹窗，在「前置任务」中勾选依赖任务，完成后甘特图自动绘制红色依赖连线' },
+                { step: '10', text: '切换显示模式：点击工具栏「切换模式」选择「项目天数」，即可按第 N 天查看任务起止（仅改变显示，任务日期不变）' },
               ].map((item) => (
                 <div key={item.step} className="flex items-start gap-2">
                   <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
@@ -160,7 +188,8 @@ export default function HelpModal({ isOpen, onClose }: HelpModalProps) {
               设置前置任务后甘特图自动绘制红色渐变虚线依赖连线；今日线在时间轴范围外时贴边显示并标注「范围外」；
               任务完成进度可在编辑弹窗中调整（0-100%），进度条双层显示（底层计划/上层实际）；
               导出 JSON 可完整备份项目数据（含任务层级、颜色、进度），换电脑或清浏览器后可导入恢复；
-              导出的 PNG 图片包含 2 倍像素密度，适合打印和分享。
+              导出的 PNG 图片包含 2 倍像素密度，适合打印和分享；
+              项目天数模式按自然日、含首尾计数，第 1 天为最早任务开始日；切换模式不改动任务数据，天数模式下时间刻度只显示数字，且不显示年月与真实起止日期。
             </p>
           </section>
 

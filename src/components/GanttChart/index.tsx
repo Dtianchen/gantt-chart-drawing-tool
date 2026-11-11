@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import TaskTable from '../TaskTable'
 import GanttTimeline from '../GanttTimeline'
 import TimeScaleHeader from '../TimeScaleHeader'
-import { Task, TimeScale, UNIT_WIDTH } from '../../types'
+import { Task, TimeScale, UNIT_WIDTH, DisplayMode } from '../../types'
 import { getVisibleTasks } from '../../utils/taskUtils'
 import dayjs from 'dayjs'
 
@@ -16,6 +16,8 @@ interface GanttChartProps {
   showTodayLine: boolean
   expandedIds?: Set<string>
   searchQuery?: string
+  displayMode?: DisplayMode
+  projectStartDate?: string
   /** 是否处于导出中：仅导出时临时挂载离屏副本，平时零开销，避免双份渲染卡顿 */
   exporting?: boolean
 }
@@ -36,6 +38,8 @@ export default function GanttChart({
   showTodayLine,
   expandedIds = new Set(),
   searchQuery,
+  displayMode = 'date',
+  projectStartDate = '',
   exporting = false,
 }: GanttChartProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -117,8 +121,9 @@ export default function GanttChart({
   ) as React.ReactElement<any> | undefined
 
   // 每次渲染都用 cloneElement 生成全新实例，避免同一元素被挂载到多个父节点导致冲突
+  // 显示模式统一注入，保证可交互表头、数据行与离屏导出副本四处完全一致
   const cloneTaskTable = (extra: Record<string, unknown>) =>
-    taskTable ? React.cloneElement(taskTable, extra) : null
+    taskTable ? React.cloneElement(taskTable, { displayMode, projectStartDate, ...extra }) : null
   const cloneGantt = (extra: Record<string, unknown>) =>
     ganttTimeline ? React.cloneElement(ganttTimeline, extra) : null
 
@@ -139,6 +144,8 @@ export default function GanttChart({
                 scale={scale}
                 dayWidth={dayWidth}
                 customDays={customDays}
+                displayMode={displayMode}
+                projectStartDate={projectStartDate}
               />
             </div>
           </div>
@@ -187,6 +194,8 @@ export default function GanttChart({
                   scale={scale}
                   dayWidth={dayWidth}
                   customDays={customDays}
+                  displayMode={displayMode}
+                  projectStartDate={projectStartDate}
                 />
               </div>
             </div>

@@ -5,10 +5,10 @@ import Toolbar from './components/Toolbar'
 import TaskTable from './components/TaskTable'
 import GanttTimeline from './components/GanttTimeline'
 import { useTaskManager } from './hooks/useTaskManager'
-import { addDays, getTotalDuration } from './utils/dateUtils'
+import { addDays, getTotalDuration, getProjectStartDate } from './utils/dateUtils'
 import { getVisibleTasks } from './utils/taskUtils'
 import dayjs from 'dayjs'
-import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH } from './types'
+import { Task, TimeScale, SCALE_CONFIG, UNIT_WIDTH, DisplayMode } from './types'
 import { LazyTaskEditModal, LazyTaskAddModal, LazyHelpModal } from './utils/lazyImport.tsx'
 
 export default function App() {
@@ -27,6 +27,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [saveToast, setSaveToast] = useState<boolean>(false)
   const [exporting, setExporting] = useState<boolean>(false)
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('date')
 
   const {
     projectName,
@@ -76,6 +77,10 @@ export default function App() {
     }
   }, [tasks])
 
+  // 项目第 1 天基准日：全部任务中最早的开始日；空项目时强制回退日期模式
+  const projectDayBase = React.useMemo(() => getProjectStartDate(tasks), [tasks])
+  const effectiveDisplayMode: DisplayMode = projectDayBase ? displayMode : 'date'
+
   // 统一计算可见行数，确保左侧任务列表与右侧甘特图的滚动范围完全一致
   const rowCount = React.useMemo(
     () => getVisibleTasks(tasks, expandedTaskIds, searchQuery).length,
@@ -84,6 +89,10 @@ export default function App() {
 
   const handleScaleChange = useCallback((newScale: TimeScale) => {
     setScale(newScale)
+  }, [])
+
+  const handleDisplayModeChange = useCallback((mode: DisplayMode) => {
+    setDisplayMode(mode)
   }, [])
 
   const toggleTodayLine = useCallback(() => {
@@ -223,6 +232,7 @@ export default function App() {
         projectName={projectName}
         onNameChange={updateProjectName}
         totalDays={totalDays}
+        displayMode={effectiveDisplayMode}
         projectStartDate={projectDateRange.startDate}
         projectEndDate={projectDateRange.endDate}
         toolbar={
@@ -236,6 +246,8 @@ export default function App() {
             onShowHelp={handleShowHelp}
             onLoadTemplate={loadTemplate}
             scale={scale}
+            displayMode={effectiveDisplayMode}
+            onDisplayModeChange={handleDisplayModeChange}
             showTodayLine={showTodayLine}
             exportRef={exportRef}
             projectName={projectName}
@@ -273,10 +285,14 @@ export default function App() {
         expandedIds={expandedTaskIds}
         searchQuery={searchQuery}
         exporting={exporting}
+        displayMode={effectiveDisplayMode}
+        projectStartDate={projectDayBase}
       >
         <TaskTable
           tasks={tasks}
           scale={scale}
+          displayMode={effectiveDisplayMode}
+          projectStartDate={projectDayBase}
           onDelete={deleteTask}
           onReorder={reorderTasks}
           onEditTask={handleEditTask}

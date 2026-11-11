@@ -1,11 +1,13 @@
 import { toPng } from 'html-to-image'
 import { useCallback } from 'react'
+import { DisplayMode } from '../types'
 
 interface HeaderInfo {
   projectName: string
   startDate: string
   endDate: string
   totalDays: number
+  displayMode?: DisplayMode
 }
 
 function esc(str: string): string {
@@ -56,10 +58,16 @@ export function useGanttExport() {
         gap:8px;padding:0 34px;border-bottom:1px solid #e5e7eb;
         font-size:12px;flex-shrink:0;background:#fff;
       `
-      headerRowEl.innerHTML = `
-        <span style="font-weight:600;color:#1f2937;white-space:nowrap">${esc(headerInfo!.projectName)}</span>
+      const isProjectDay = headerInfo!.displayMode === 'project-day'
+      // 天数模式隐藏真实起止日期，并补回「项目名称:」标题，与界面项目头部一致
+      const projectNameSpan = isProjectDay
+        ? `<span style="color:#6b7280;white-space:nowrap">项目名称: <span style="font-weight:600;color:#1f2937">${esc(headerInfo!.projectName)}</span></span>`
+        : `<span style="font-weight:600;color:#1f2937;white-space:nowrap">${esc(headerInfo!.projectName)}</span>`
+      const dateSpans = isProjectDay ? '' : `
         <span style="color:#6b7280;white-space:nowrap">开始时间：<span style="color:#374151">${esc(headerInfo!.startDate)}</span></span>
-        <span style="color:#6b7280;white-space:nowrap">结束时间：<span style="color:#374151">${esc(headerInfo!.endDate)}</span></span>
+        <span style="color:#6b7280;white-space:nowrap">结束时间：<span style="color:#374151">${esc(headerInfo!.endDate)}</span></span>`
+      headerRowEl.innerHTML = `
+        ${projectNameSpan}${dateSpans}
         <span style="color:#4b5563;white-space:nowrap">计划工期：<span style="color:#d97706;font-weight:600;margin-left:2px">${headerInfo!.totalDays}</span>天</span>
       `
       element.prepend(headerRowEl)

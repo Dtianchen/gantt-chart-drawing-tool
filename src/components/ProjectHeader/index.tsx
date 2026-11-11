@@ -1,11 +1,14 @@
 
 
+import { DisplayMode } from '../../types'
+
 interface ProjectHeaderProps {
   projectName: string
   onNameChange: (name: string) => void
   totalDays: number
   projectStartDate: string
   projectEndDate: string
+  displayMode?: DisplayMode
   toolbar?: React.ReactNode
 }
 
@@ -15,6 +18,7 @@ export default function ProjectHeader({
   totalDays,
   projectStartDate,
   projectEndDate,
+  displayMode = 'date',
   toolbar,
 }: ProjectHeaderProps) {
   return (
@@ -24,7 +28,7 @@ export default function ProjectHeader({
         {toolbar && toolbar}
       </div>
 
-      {/* 第二行：项目名称 + 开始时间 + 结束时间 + 计划工期 */}
+      {/* 第二行：项目名称 + 起止日期（仅真实日期模式）+ 计划工期 */}
       <div className="h-9 flex items-center gap-2 px-[26px] md:px-[34px] border-t border-slate-200 text-sm">
         <div className="flex items-center gap-1 shrink-0">
           <span className="text-gray-500">项目名称:</span>
@@ -40,12 +44,16 @@ export default function ProjectHeader({
 
         {projectStartDate && projectEndDate ? (
           <>
-            <span className="text-gray-500 shrink-0 whitespace-nowrap">
-              开始时间：<span className="text-gray-700">{projectStartDate}</span>
-            </span>
-            <span className="text-gray-500 shrink-0 whitespace-nowrap">
-              结束时间：<span className="text-gray-700">{projectEndDate}</span>
-            </span>
+            {displayMode !== 'project-day' && (
+              <>
+                <span className="text-gray-500 shrink-0 whitespace-nowrap">
+                  开始时间：<span className="text-gray-700">{projectStartDate}</span>
+                </span>
+                <span className="text-gray-500 shrink-0 whitespace-nowrap">
+                  结束时间：<span className="text-gray-700">{projectEndDate}</span>
+                </span>
+              </>
+            )}
             <span className="text-gray-600 shrink-0 whitespace-nowrap py-1.5">
               计划工期：<span className="text-amber-600 font-semibold">{totalDays}</span>
               <span className="ml-0.5">天</span>

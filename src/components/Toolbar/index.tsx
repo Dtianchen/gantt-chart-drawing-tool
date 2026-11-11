@@ -1,6 +1,6 @@
 import { useRef, useCallback, useState } from 'react'
 import { Download, ZoomIn, ZoomOut, Plus, Calendar, HelpCircle, LayoutTemplate, AlertTriangle, X, ChevronDown, FileSpreadsheet, Undo2, Redo2, Search, FileJson, Upload } from 'lucide-react'
-import { TimeScale, SCALE_CONFIG, HistorySnapshot } from '../../types'
+import { TimeScale, SCALE_CONFIG, HistorySnapshot, DisplayMode } from '../../types'
 import { useGanttExport } from '../../hooks/useGanttExport'
 import { useGanttExcelExport } from '../../hooks/useGanttExcelExport'
 import dayjs from 'dayjs'
@@ -29,6 +29,8 @@ interface ToolbarProps {
   onShowHelp: () => void
   onLoadTemplate?: (templateId: string) => void
   scale: TimeScale
+  displayMode?: DisplayMode
+  onDisplayModeChange?: (mode: DisplayMode) => void
   showTodayLine: boolean
   exportRef: React.RefObject<HTMLDivElement | null>
   projectName?: string
@@ -64,6 +66,8 @@ export default function Toolbar({
   onShowHelp,
   onLoadTemplate,
   scale,
+  displayMode = 'date',
+  onDisplayModeChange,
   showTodayLine,
   exportRef,
   projectName = '',
@@ -93,6 +97,7 @@ export default function Toolbar({
   const [showTemplates, setShowTemplates] = useState(false)
   const [confirmTemplate, setConfirmTemplate] = useState<TemplateOption | null>(null)
   const [showScaleMenu, setShowScaleMenu] = useState(false)
+  const [showDisplayMenu, setShowDisplayMenu] = useState(false)
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [showAddMenu, setShowAddMenu] = useState(false)
   const [customInputValue, setCustomInputValue] = useState(String(customDays))
@@ -111,6 +116,7 @@ export default function Toolbar({
           startDate: projectStartDate,
           endDate: projectEndDate,
           totalDays,
+          displayMode,
         },
         taskCount,
         // 导出前挂载离屏副本，导出后卸载，平时零开销
@@ -123,7 +129,7 @@ export default function Toolbar({
         () => onExportStateChange?.(false)
       )
     }
-  }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays, onExportStateChange, taskCount])
+  }, [exportRef, exportGanttAsImage, projectName, projectStartDate, projectEndDate, totalDays, onExportStateChange, taskCount, displayMode])
 
   const handleExportExcel = useCallback(() => {
     const timestamp = dayjs().format('YYYYMMDD_HHmmss')
@@ -134,9 +140,12 @@ export default function Toolbar({
       startDate: projectStartDate,
       endDate: projectEndDate,
       totalDays,
-    }, filename)
+    }, filename, {
+      displayMode,
+      projectStartDate,
+    })
     setShowExportMenu(false)
-  }, [tasks, exportGanttAsExcel, projectName, projectStartDate, projectEndDate, totalDays])
+  }, [tasks, exportGanttAsExcel, projectName, projectStartDate, projectEndDate, totalDays, displayMode])
 
   const handleSelectTemplate = useCallback((templateId: string) => {
     const tpl = TEMPLATE_OPTIONS.find(t => t.id === templateId)
@@ -367,6 +376,48 @@ export default function Toolbar({
                   className="hidden"
                 />
               </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* 显示模式切换下拉菜单 */}
+      <div className="relative">
+        <button
+          onClick={() => setShowDisplayMenu(prev => !prev)}
+          className={`${btnBase} bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 hover:border-slate-300`}
+          title="切换模式"
+        >
+          <Calendar size={14} />
+          切换模式
+          <ChevronDown size={13} className={`transition-transform ${showDisplayMenu ? 'rotate-180' : ''}`} />
+        </button>
+
+        {showDisplayMenu && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={(e) => { e.preventDefault(); setShowDisplayMenu(false) }} />
+
+            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 w-[150px] bg-white rounded-xl shadow-xl border border-slate-200 py-1 z-40 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="px-3 pt-2 pb-1.5 border-b border-slate-100">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">切换模式</p>
+              </div>
+
+              {(['date', 'project-day'] as DisplayMode[]).map(mode => {
+                const isActive = mode === displayMode
+                return (
+                  <button
+                    key={mode}
+                    onClick={() => { onDisplayModeChange?.(mode); setShowDisplayMenu(false) }}
+                    className={`w-full flex items-center gap-2 px-3 py-2 transition-colors text-left ${
+                      isActive ? 'bg-blue-50 text-blue-700 font-medium' : 'hover:bg-slate-50 text-slate-700'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full shrink-0 ${isActive ? 'bg-blue-500' : 'bg-slate-300'}`} />
+                    <span className="text-sm">{mode === 'date' ? '项目日期' : '项目天数'}</span>
+                    <span className="text-[11px] text-slate-400 ml-auto">{mode === 'date' ? '日历日期' : '第1天起算'}</span>
+                  </button>
+                )
+              })}
             </div>
           </>
         )}
