@@ -1,49 +1,84 @@
-name: 手动创建发行版
+# 自动打包 Windows exe 并发布到 Release
+# 触发条件：
+#   1. push 以 v 开头的标签（如 v1.1.6），自动构建并挂到 GitHub Release
+#   2. 手动 workflow_dispatch（可在 GitHub UI 选择 ref=v1.1.5 重跑，给已发布版本补 exe）
+name: Build Release (Windows exe)
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
-    inputs:
-      version:
-        description: '版本号（如 1.0.13）'
-        required: true
-        default: '1.0.13'
-      release_notes:
-        description: '更新说明'
-        required: false
+
+permissions:
+  contents: write
 
 jobs:
-  build-and-release:
+  build-windows:
+    name: Build Windows exe
     runs-on: windows-latest
     steps:
-      - name: 检出代码
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 设置 Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
 
-      - name: 安装依赖
+      - name: Install dependencies
         run: npm ci
 
-      - name: 更新版本号
-        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
-
-      - name: 构建生产版本
-        run: npm run build
-
-      - name: 打包 Electron 应用
+      - name: Build & package (electron-builder --win)
         run: npm run electron:build
+        env:
+          # 关闭自动查找代码签名证书，避免在无签名环境下卡住
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          CI: true
 
-      - name: 创建 GitHub Release
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p release-assets
+          # electron-builder 输出目录配置为仓库外的 ../gantt-exe
+          cp -r ../gantt-exe/* release-assets/ 2>/dev/null || true
+          echo "collected files:"
+          ls -la release-assets
+
+      - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          name: v${{ github.event.inputs.version }}
-          body: ${{ github.event.inputs.release_notes || '自动发布' }}
+          # 标签已存在时该 action 会更新对应 Release 并追加附件
           files: |
-            ../gantt-exe/*.exe
-            ../gantt-exe/*.zip
-          draft: false
-          prerelease: false
+            release-assets/*.exe
+            release-assets/*.zip
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ---- 可选：Gitee Release ----
+      # 需在 GitHub 仓库 Settings > Secrets 配置 GITEE_TOKEN（Gitee 私人令牌），
+      # 未配置时此步骤自动跳过（不会报错）。
+      - name: Publish to Gitee Release
+        if: ${{ secrets.GITEE_TOKEN != '' }}
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_OWNER: Dtianchen
+          GITEE_REPO: gantt-chart-drawing-tool
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -e
+          BASE="https://gitee.com/api/v5/repos/${GITEE_OWNER}/${GITEE_REPO}"
+          # 创建 Release（已存在则忽略错误）
+          curl -s -X POST "${BASE}/releases?access_token=${GITEE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "{\"tag_name\":\"${TAG}\",\"name\":\"${TAG}\",\"target_commitish\":\"master\"}" || true
+          RELEASE_ID=$(curl -s "${BASE}/releases/tags/${TAG}?access_token=${GITEE_TOKEN}" \
+            | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+          echo "Gitee release id: $RELEASE_ID"
+          for f in release-assets/*; do
+            [ -f "$f" ] || continue
+            echo "uploading $f"
+            curl -s -X POST "${BASE}/releases/${RELEASE_ID}/attach_files?access_token=${GITEE_TOKEN}" \
+              -F "file=@${f}" || true
+          done
